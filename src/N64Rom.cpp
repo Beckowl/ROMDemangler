@@ -62,7 +62,7 @@ void N64Rom::OpenFile(const char *Path, const char *RAMPath) {
     std::string FoundUCode = "";
     std::string ExtraConfig = "";
 
-    char* SigPtr = (char*)memmem(mData, mSize, "RSP Gfx ucode ", 14);
+    char *SigPtr = (char*)memmem(mData, mSize, "RSP Gfx ucode ", 14);
     if (!SigPtr) {
         // old f3d
         SigPtr = (char*)memmem(mData, mSize, "RSP SW Version: ", 16);

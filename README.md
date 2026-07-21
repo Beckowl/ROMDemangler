@@ -9,7 +9,7 @@ Credits:
 
 Features:
 - Supports MIO0, YAY0, and RNC compression methods.
-- Compatible with most standard microcodes (F3D, F3DEX, F3DEX2, F3DZEX).
+- Compatible with most microcodes (F3D, F3DEX, F3DEX2, F3DZEX).
 - Supports ROMs modified via Decomp, SM64 ROM Manager, SM64 Editor, or Bowser's Blueprints.
 - Configurable Segment 0 handling: choose to ignore it entirely or load its data from an external RAM dump.
 

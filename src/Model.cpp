@@ -212,29 +212,12 @@ void ParseRDPTileCommand(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 C
             
             case G_SETTILESIZE: {
                 F3DTexture &Tex = EnsureActiveTexture(Textures);
-                
-                auto F2 = [](u32 x) { return (u16)((x >> 2) + 1); };
-                
-                u16 WidthFromLRS = F2(C1(12,12));
-                u16 HeightFromLRT = F2(C1(0,12));
 
                 u16 Uls = C0(12,12), Ult = C0(0,12);
                 u16 Lrs = C1(12,12), Lrt = C1(0,12);
 
-                if (Uls == 0 && Ult == 0 && Lrs > 0 && Lrt > 0) {
-                    Tex.Width = WidthFromLRS;
-                    Tex.Height = HeightFromLRT;
-                } else {
-                    auto DecodeSizePixels = [](u32 Diff) {
-                        return (u16)(((Diff >> 2) & 0x3FF) + 1);
-                    };
-                    Tex.Width = DecodeSizePixels(Lrs - Uls + 1);
-                    Tex.Height = DecodeSizePixels(Lrt - Ult + 1);
-                }
-
-                if (Tex.Width == 0 || Tex.Height == 0) {
-                    //fucked perhaps??
-                }
+                Tex.Width = (u16)(((Lrs >> 2) - (Uls >> 2)) + 1);
+                Tex.Height = (u16)(((Lrt >> 2) - (Ult >> 2)) + 1);
                 
                 break;
             }
