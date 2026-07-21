@@ -156,7 +156,7 @@ void ParseRDPTileCommand(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 C
                 // its gonna say im missing a texture
 
                 // but... this doesnt work for some hacks and ends up
-                // exporting some wrong actors :(
+                // exporting some wrong textures :(
                 if (!Textures.empty() && C0(21, 3) != F3D_IMG_CI) {
                     F3DTexture &Current = Textures.back();
                     if (Current.Texture != 0 && Current.Texture != W1) {
