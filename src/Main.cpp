@@ -1,0 +1,230 @@
+#include "LevelScript.h"
+#include "Coop.h"
+#include "Decompress.h"
+#include "cxxopts.hpp"
+
+bool VerbosePrinting = false;
+std::string ActorsExport = "none";
+enum SM64GameType GameType = GT_UNKNOWN;
+bool FoundScriptEntry = false;
+bool ExportSegment0 = false;
+bool IgnoreSegment0 = false;
+
+const std::set<std::string> SM64ROMManagerVersions = {
+    "v0.6.2",
+    "v0.7",
+    "v0.7.1",
+    "v0.7.2",
+    "v0.7.4",
+    "v0.7.5",
+    "v0.7.6",
+    "v0.7.7",
+    "v0.7.8",
+    "v0.7.9",
+    "v0.7.10",
+    "v0.7.11",
+    "v1.0",
+    "v1.0.1",
+    "v1.0.2",
+    "v1.0.3",
+    "v1.0.4",
+    "v1.1.1",
+    "v1.2",
+    "v1.3",
+    "v1.3.0.1",
+    "v1.4",
+    "v1.4.0.1",
+    "v1.5",
+    "v1.6",
+    "v1.6.1",
+    "v1.6.2",
+    "v1.6.3",
+    "v1.7",
+    "v1.7.1",
+    "v1.7.2",
+    "v1.7.3",
+    "v1.7.4",
+    "v1.7.5",
+    "v1.7.6",
+    "v1.7.7",
+    "v1.7.8",
+    "v1.7.9",
+    "v1.7.10",
+    "v1.8",
+    "v1.8.1",
+    "v1.8.2",
+    "v1.8.3",
+    "v1.9",
+    "v1.9.1",
+    "v1.9.2",
+    "v1.9.3",
+    "v1.9.4",
+    "v1.9.5",
+    "v1.9.6",
+    "v1.9.7",
+    "v1.9.8",
+    "v1.9.9",
+    "v1.9.10",
+    "v1.9.11",
+    "v1.9.12",
+    "v1.9.13",
+    "v1.9.15",
+    "v1.9.17",
+    "v1.9.18",
+    "v1.10.1",
+    "v1.10.2",
+    "v1.10.3",
+    "v1.10.4",
+    "v1.10.5",
+    "v1.10.6",
+    "v1.11",
+    "v1.11.1",
+    "v1.11.2",
+    "v1.11.3",
+    "v1.11.4",
+    "v1.11.5",
+    "v1.11.6",
+    "v1.11.7",
+    "v1.11.8",
+    "v1.11.9",
+    "v1.11.10",
+    "v1.11.12",
+    "v1.11.13",
+    "v1.11.14.1",
+    "v1.11.15",
+    "v1.12.0.2",
+    "v1.12.1",
+    "v1.12.2",
+    "v1.12.3",
+    "v1.12.4",
+    "v1.12.5",
+    "v1.12.6",
+    "v1.12.7",
+    "v1.12.8",
+    "v1.12.9",
+    "v1.12.9.1",
+    "v1.12.11",
+    "v1.12.12",
+    "v1.12.13.1",
+    "v1.12.14",
+    "v1.12.15",
+    "v1.12.16.1",
+    "v1.13.1",
+    "v1.13.2",
+    "v1.13.3",
+    "v1.13.4",
+    "v1.13.5",
+    "v1.13.6",
+    "v1.13.6.1",
+    "v1.13.7",
+    "v1.13.8",
+    "v1.13.9",
+    "v1.13.10",
+    "v1.13.11",
+    "v1.13.12",
+};
+
+int main(int argc, char** argv) {
+    cxxopts::Options Options("ROMDemangler", "");
+    Options.add_options()
+        ("rom", "ROM file", cxxopts::value<std::string>())
+        ("levels", "List of level IDs to export", cxxopts::value<std::vector<int>>())
+        ("actors", "Which actors to export, vanilla|custom|all|none", cxxopts::value<std::string>())
+        ("ram", "The File/Memory to get Segment 0 from", cxxopts::value<std::string>())
+        ("verbose", "Print more info", cxxopts::value<bool>())
+        ("ignore-seg-0", "Don't export stuff from Segment 0", cxxopts::value<bool>())
+        ("h,help", "Print usage");
+
+    auto Result = Options.parse(argc, argv);
+    VerbosePrinting = Result["verbose"].as<bool>();
+    IgnoreSegment0 = Result["ignore-seg-0"].as<bool>();
+    std::string RAMPath;
+    if (Result.count("actors")) ActorsExport = Result["actors"].as<std::string>();
+    if (Result.count("ram")) {
+        RAMPath = Result["ram"].as<std::string>();
+        ExportSegment0 = true;
+    }
+
+    if (Result.count("help") || !Result.count("rom") || !Result.count("levels")) {
+        std::cout << Options.help() << std::endl;
+        return 0;
+    }
+
+    std::string RomPath = Result["rom"].as<std::string>();
+    std::vector<int> LvlIDs = Result["levels"].as<std::vector<int>>();
+
+    N64Rom Rom;
+    Rom.OpenFile(RomPath.c_str(), ExportSegment0 ? RAMPath.c_str() : nullptr);
+
+    std::string GameTypeStr = "ROM is made with ";
+
+    const u64 EditorPatterns[] = {
+        0x800800000E0000C4,
+        0x0800000A00A00078,
+        0x800800001900001C
+    };
+    u64 PatternInRom = Rom.ReadBytesPhysical<u64>(EDITOR_MAGIC_ADDR);
+    u64 PatternInRom2 = Rom.ReadBytesPhysical<u64>(EDITOR_MAGIC_ADDR+8);
+    for (auto &P : EditorPatterns) {
+        if (PatternInRom == P || PatternInRom2 == P) {
+            GameType = GT_EDITOR;
+            GameTypeStr += "SM64 Editor";
+            break;
+        }
+    }
+    
+    if (GameType != GT_EDITOR) {
+        if (Rom.mSize >= BBP_SIGNATURE_ADDR) {
+            if (Rom.ReadBytesPhysical<u32>(BBP_SIGNATURE_ADDR) == BBP_SIGNATURE) {
+                GameType = GT_BBP;
+                GameTypeStr += "Bowser's Blueprints ";
+
+                u32 BBPMetaDataAddr = Rom.ReadBytesPhysical<u32>(BBP_SIGNATURE_ADDR+4);
+                s16 Major = Rom.ReadBytesPhysical<s16>(BBPMetaDataAddr);
+                s16 Minor = Rom.ReadBytesPhysical<s16>(BBPMetaDataAddr+2);
+                s16 Patch = Rom.ReadBytesPhysical<s16>(BBPMetaDataAddr+4);
+                GameTypeStr += std::format("v{}.{}.{}", Major, Minor, Patch);
+            }
+        }
+
+        if (GameType != GT_BBP) {
+            u32 VOffset = RM_VERSION_ADDR;
+            s32 DevInfo = Rom.ReadBytesPhysical<s32>(VOffset);
+            u8 Major = Rom.ReadBytesPhysical<u8>(VOffset+4);
+            u8 Minor = Rom.ReadBytesPhysical<u8>(VOffset+5);
+            u8 Build = Rom.ReadBytesPhysical<u8>(VOffset+6);
+            u8 Revision = Rom.ReadBytesPhysical<u8>(VOffset+7);
+
+            std::string Version = std::format("v{}.{}", Major, Minor);
+            if (Build > 0) {
+                Version += std::format(".{}", Build);
+            }
+            if (Revision > 0) {
+                Version += std::format(".{}", Revision);
+            }
+            if (SM64ROMManagerVersions.count(Version)) {
+                GameType = GT_ROM_MANAGER;
+                GameTypeStr += "SM64 ROM Manager " + Version;
+            }
+        }
+    }
+
+    if (GameType == GT_UNKNOWN) {
+        GameType = GT_DECOMP;
+        GameTypeStr += "Decomp";
+    }
+    printf((GameTypeStr + "\n").c_str());
+
+    std::error_code ErrCode;
+    if (std::filesystem::exists("output")) std::filesystem::remove_all("output", ErrCode);
+    mkdir("output", 0777);
+
+    for (const int &LvlID : LvlIDs) {
+        ExportLevel(Rom, LvlID);
+    }
+
+    ExportLua(Rom);
+    Rom.CloseFile();
+    fclose(MapFile);
+    return 0;
+}

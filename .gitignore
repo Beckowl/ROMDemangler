@@ -1,0 +1,6 @@
+*.z64
+*.c
+*.png
+*.lua
+build/
+.vscode/
