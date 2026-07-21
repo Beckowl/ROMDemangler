@@ -1,6 +1,8 @@
 #include "MovingTexture.h"
 #include "LevelScript.h"
 
+std::vector<MovingTextureQC> MovingTextures = {};
+
 // this is the most depressing function i have ever wrote
 void ExportMovText(N64Rom &Rom, u8 Area, std::string LvlName, LevelScript &Script, const char *FilePath) {
     FILE *MovTextDump = fopen(FilePath, "w");
@@ -49,6 +51,14 @@ void ExportMovText(N64Rom &Rom, u8 Area, std::string LvlName, LevelScript &Scrip
         }
         fprintf(MovTextDump, "    {-1, NULL},\n");
         fprintf(MovTextDump, "};\n");
+
+        MovingTextureQC NewMovTexQC;
+        NewMovTexQC.LvlName = LvlName;
+        NewMovTexQC.LvlID = Script.LevelID;
+        NewMovTexQC.Area = Area;
+        NewMovTexQC.Type = WaterType;
+        NewMovTexQC.Index = DT;
+        MovingTextures.push_back(NewMovTexQC);
     }
     fclose(MovTextDump);
 }
