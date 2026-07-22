@@ -116,21 +116,20 @@ const char *F3D_AC(enum F3DCCPart Part, u16 Element) {
     return "0";
 }
 
-
 F3DTexture &EnsureActiveTexture(std::vector<F3DTexture> &Textures) {
     if (Textures.empty()) {
-        F3DTexture t = {};
-        t.TextureSeg = 0;
-        t.Texture = 0;
-        t.Tile = 0xFF; // fucked
-        t.ImgType = F3D_IMG_RGBA;
-        t.BitDepth = G_IM_SIZ_16b;
-        t.Length = 0;
-        t.Width = 0;
-        t.Height = 0;
-        t.Palette = 0;
-        t.PaletteSeg = 0;
-        Textures.push_back(t);
+        F3DTexture Tex = {};
+        Tex.TextureSeg = 0;
+        Tex.Texture = 0;
+        Tex.Tile = 0xFF;
+        Tex.ImgType = F3D_IMG_RGBA;
+        Tex.BitDepth = 16;
+        Tex.Length = 0;
+        Tex.Width = 0;
+        Tex.Height = 0;
+        Tex.Palette = 0;
+        Tex.PaletteSeg = 0;
+        Textures.push_back(Tex);
     }
     return Textures.back();
 }
@@ -149,19 +148,18 @@ void ParseRDPTileCommand(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 C
 
         switch (Cmd) {
             case G_SETTIMG: {
-                // push textures
-                if (!Textures.empty() && C0(21, 3) != F3D_IMG_CI) {
+                u32 ImgType = C0(21, 3);
+                u32 BitDepth = GetBitDepthFromSize(C0(19, 2));
+
+                if (!Textures.empty()) {
                     F3DTexture &Current = Textures.back();
                     if (Current.Texture != 0 && Current.Texture != W1) {
                         F3DTexture NewTex = Current; 
                         NewTex.TextureSeg = W1;
                         NewTex.Texture = W1;
-                        NewTex.ImgType = (F3DImageType)C0(21, 3);
-                        NewTex.BitDepth = GetBitDepthFromSize(C0(19, 2));
-                        
-                        /*NewTex.Width = 0;
-                        NewTex.Height = 0;
-                        NewTex.Length = 0;*/
+                        NewTex.ImgType = (F3DImageType)ImgType;
+                        NewTex.BitDepth = BitDepth;
+                        NewTex.Tile = 0xFF;
                         
                         Textures.push_back(NewTex);
                         break; 
@@ -171,8 +169,8 @@ void ParseRDPTileCommand(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 C
                 F3DTexture &Tex = EnsureActiveTexture(Textures);
                 Tex.TextureSeg = W1;
                 Tex.Texture = W1;
-                Tex.ImgType = (F3DImageType)C0(21, 3);
-                Tex.BitDepth = GetBitDepthFromSize(C0(19, 2));
+                Tex.ImgType = (F3DImageType)ImgType;
+                Tex.BitDepth = BitDepth;
                 break;
             }
             
@@ -186,45 +184,40 @@ void ParseRDPTileCommand(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 C
                 Tex.Tile = Tile;
                 Tex.ImgType = (F3DImageType)FMT;
                 Tex.BitDepth = GetBitDepthFromSize(Siz);
-
-                if (Tex.Tile == 0xFF || Tex.Tile == Tile) {
-                    Tex.Tile = Tile;
-                    if (FMT != G_IM_FMT_CI) {
-                        Tex.ImgType = (F3DImageType)FMT;
-                        Tex.BitDepth = GetBitDepthFromSize(Siz);
-                    } else {
-                    }
-                }
                 break;
             }
             
             case G_LOADBLOCK: {
                 F3DTexture &Tex = EnsureActiveTexture(Textures);
                 u32 Texels = C1(12, 12);
-                Tex.Length = ((Texels + 1) * Tex.BitDepth) / 8;
+                u32 Bytes = ((Texels + 1) * (u32)Tex.BitDepth) / 8;
+                if (Bytes > Tex.Length) {
+                    Tex.Length = Bytes;
+                }
                 break;
             }
             
             case G_SETTILESIZE: {
                 F3DTexture &Tex = EnsureActiveTexture(Textures);
 
-                u16 Uls = C0(12,12), Ult = C0(0,12);
-                u16 Lrs = C1(12,12), Lrt = C1(0,12);
+                u16 Uls = C0(12, 12);
+                u16 Ult = C0(0, 12);
+                u16 Lrs = C1(12, 12);
+                u16 Lrt = C1(0, 12);
 
-                Tex.Width = (u16)(((Lrs >> 2) - (Uls >> 2)) + 1);
-                Tex.Height = (u16)(((Lrt >> 2) - (Ult >> 2)) + 1);
-                
+                u16 W = (u16)(((Lrs >> 2) - (Uls >> 2)) + 1);
+                u16 H = (u16)(((Lrt >> 2) - (Ult >> 2)) + 1);
+                if (W > 0 && W <= 1024 &&  H > 0 && H <= 1024) {
+                    Tex.Width = W;
+                    Tex.Height = H;
+                }
                 break;
             }
             
             case G_LOADTLUT: {
                 F3DTexture &Tex = EnsureActiveTexture(Textures);
-                
-                if (C1(24,3) == Tex.Tile) {
-                    Tex.Palette = Tex.Texture;
-                    Tex.PaletteSeg = Tex.TextureSeg;
-                }
-                
+                Tex.Palette = Tex.Texture;
+                Tex.PaletteSeg = Tex.TextureSeg;
                 break;
             }
         }
@@ -248,19 +241,15 @@ void ParseRDPTileCommand(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 C
                 const char *B0First = F3D_CC(CC_PART_B, C1(28, 4));
                 const char *C0First = F3D_CC(CC_PART_C, C0(15, 5));
                 const char *D0First = F3D_CC(CC_PART_D, C1(15, 3));
-                // C0(12, 3), C1(12, 3), C0(9, 3),  C1(9, 3)
                 const char *AlphaA0First = F3D_AC(CC_PART_A, C0(12, 3));
                 const char *AlphaB0First = F3D_AC(CC_PART_B, C1(12, 3));
                 const char *AlphaC0First = F3D_AC(CC_PART_C, C0(9, 3));
                 const char *AlphaD0First = F3D_AC(CC_PART_D, C1(9, 3));
 
-                // cycle 2
-                // C0(5, 4),  C1(24, 4), C0(0, 5),  C1(6, 3)
                 const char *A0Second = F3D_CC(CC_PART_A, C0(5, 4));
                 const char *B0Second = F3D_CC(CC_PART_B, C1(21, 4));
                 const char *C0Second = F3D_CC(CC_PART_C, C0(0, 5));
                 const char *D0Second = F3D_CC(CC_PART_D, C1(6, 3));
-                // C1(21, 3), C1(3, 3),  C1(18, 3), C1(0, 3),
                 const char *AlphaA0Second = F3D_AC(CC_PART_A, C1(21, 3));
                 const char *AlphaB0Second = F3D_AC(CC_PART_B, C1(3, 3));
                 const char *AlphaC0Second = F3D_AC(CC_PART_C, C1(18, 3));
@@ -280,7 +269,7 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList,
                                std::vector<F3DLight> &Lights,
                                std::vector<F3DTexture> &Textures,
                                std::vector<F3DDL> &DLs,
-                               std::vector<u32> CallStack = {}) {
+                               std::vector<u32> &CallStack) {
     u32 Entry = (DisplayList);
 
     if (std::find(CallStack.begin(), CallStack.end(), DisplayList) != CallStack.end()) {
@@ -435,11 +424,13 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, std::string LvlName, u8 Area
     if (!IsActor) {
         for (s32 D = 0; D < Script.AreaDatas[Area].DisplayLists.size(); D++) {
             u32 *Data = Script.AreaDatas[Area].DisplayLists.data();
-            ParseDisplayListRecursive(Rom, Data[D], Vertices, Ambients, Lights, Textures, DLs);
+            std::vector<u32> CallStack = {};
+            ParseDisplayListRecursive(Rom, Data[D], Vertices, Ambients, Lights, Textures, DLs, CallStack);
         }
     } else {
         for (u32 ActorDL : Act->DisplayLists) {
-            ParseDisplayListRecursive(Rom, ActorDL, Vertices, Ambients, Lights, Textures, DLs);
+            std::vector<u32> CallStack = {};
+            ParseDisplayListRecursive(Rom, ActorDL, Vertices, Ambients, Lights, Textures, DLs, CallStack);
         }
     }
 
