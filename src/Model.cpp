@@ -149,23 +149,19 @@ void ParseRDPTileCommand(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 C
 
         switch (Cmd) {
             case G_SETTIMG: {
-                // extremely fucked up hack because of old level editors
-                // they spammed 2 set images back to back which,
-                // ofc the last one will override the old one
-                // but i still gotta export it otherwise
-                // its gonna say im missing a texture
-
-                // but... this doesnt work for some hacks and ends up
-                // exporting some wrong textures :(
+                // push textures
                 if (!Textures.empty() && C0(21, 3) != F3D_IMG_CI) {
                     F3DTexture &Current = Textures.back();
                     if (Current.Texture != 0 && Current.Texture != W1) {
                         F3DTexture NewTex = Current; 
                         NewTex.TextureSeg = W1;
                         NewTex.Texture = W1;
-                        NewTex.Width = 0;
+                        NewTex.ImgType = (F3DImageType)C0(21, 3);
+                        NewTex.BitDepth = GetBitDepthFromSize(C0(19, 2));
+                        
+                        /*NewTex.Width = 0;
                         NewTex.Height = 0;
-                        NewTex.Length = 0;
+                        NewTex.Length = 0;*/
                         
                         Textures.push_back(NewTex);
                         break; 
@@ -187,7 +183,6 @@ void ParseRDPTileCommand(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 C
                 u32 FMT = C0(21, 3);
                 u32 Siz = C0(19, 2);
 
-                
                 Tex.Tile = Tile;
                 Tex.ImgType = (F3DImageType)FMT;
                 Tex.BitDepth = GetBitDepthFromSize(Siz);
@@ -206,7 +201,7 @@ void ParseRDPTileCommand(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 C
             case G_LOADBLOCK: {
                 F3DTexture &Tex = EnsureActiveTexture(Textures);
                 u32 Texels = C1(12, 12);
-                Tex.Length = ((Texels + 1) * Tex.BitDepth) / 8; 
+                Tex.Length = ((Texels + 1) * Tex.BitDepth) / 8;
                 break;
             }
             
@@ -249,27 +244,27 @@ void ParseRDPTileCommand(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 C
                             C1(24,3),C0(12,12),C0(0,12),C1(12,12),C1(0,12)); break;
             case G_LOADTLUT: fprintf(ModelDump,"    //gsDPLoadTLUTCmd(%u, %u),\n",C1(24,3),C1(14,10)); break;
             case G_SETCOMBINE: {
-                const char* A0First = F3D_CC(CC_PART_A, C0(20, 4));
-                const char* B0First = F3D_CC(CC_PART_B, C1(28, 4));
-                const char* C0First = F3D_CC(CC_PART_C, C0(15, 5));
-                const char* D0First = F3D_CC(CC_PART_D, C1(15, 3));
+                const char *A0First = F3D_CC(CC_PART_A, C0(20, 4));
+                const char *B0First = F3D_CC(CC_PART_B, C1(28, 4));
+                const char *C0First = F3D_CC(CC_PART_C, C0(15, 5));
+                const char *D0First = F3D_CC(CC_PART_D, C1(15, 3));
                 // C0(12, 3), C1(12, 3), C0(9, 3),  C1(9, 3)
-                const char* AlphaA0First = F3D_AC(CC_PART_A, C0(12, 3));
-                const char* AlphaB0First = F3D_AC(CC_PART_B, C1(12, 3));
-                const char* AlphaC0First = F3D_AC(CC_PART_C, C0(9, 3));
-                const char* AlphaD0First = F3D_AC(CC_PART_D, C1(9, 3));
+                const char *AlphaA0First = F3D_AC(CC_PART_A, C0(12, 3));
+                const char *AlphaB0First = F3D_AC(CC_PART_B, C1(12, 3));
+                const char *AlphaC0First = F3D_AC(CC_PART_C, C0(9, 3));
+                const char *AlphaD0First = F3D_AC(CC_PART_D, C1(9, 3));
 
                 // cycle 2
                 // C0(5, 4),  C1(24, 4), C0(0, 5),  C1(6, 3)
-                const char* A0Second = F3D_CC(CC_PART_A, C0(5, 4));
-                const char* B0Second = F3D_CC(CC_PART_B, C1(21, 4));
-                const char* C0Second = F3D_CC(CC_PART_C, C0(0, 5));
-                const char* D0Second = F3D_CC(CC_PART_D, C1(6, 3));
+                const char *A0Second = F3D_CC(CC_PART_A, C0(5, 4));
+                const char *B0Second = F3D_CC(CC_PART_B, C1(21, 4));
+                const char *C0Second = F3D_CC(CC_PART_C, C0(0, 5));
+                const char *D0Second = F3D_CC(CC_PART_D, C1(6, 3));
                 // C1(21, 3), C1(3, 3),  C1(18, 3), C1(0, 3),
-                const char* AlphaA0Second = F3D_AC(CC_PART_A, C1(21, 3));
-                const char* AlphaB0Second = F3D_AC(CC_PART_B, C1(3, 3));
-                const char* AlphaC0Second = F3D_AC(CC_PART_C, C1(18, 3));
-                const char* AlphaD0Second = F3D_AC(CC_PART_D, C1(0, 3));
+                const char *AlphaA0Second = F3D_AC(CC_PART_A, C1(21, 3));
+                const char *AlphaB0Second = F3D_AC(CC_PART_B, C1(3, 3));
+                const char *AlphaC0Second = F3D_AC(CC_PART_C, C1(18, 3));
+                const char *AlphaD0Second = F3D_AC(CC_PART_D, C1(0, 3));
 
                 fprintf(ModelDump,"    gsDPSetCombineLERP(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s),\n",
                 A0First, B0First, C0First, D0First, AlphaA0First, AlphaB0First, AlphaC0First, AlphaD0First,
@@ -284,120 +279,81 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList,
                                std::vector<F3DLight> &Ambients,
                                std::vector<F3DLight> &Lights,
                                std::vector<F3DTexture> &Textures,
-                               std::vector<F3DDL> &DLs) {
+                               std::vector<F3DDL> &DLs,
+                               std::vector<u32> CallStack = {}) {
     u32 Entry = (DisplayList);
 
-    for (const auto &DL : DLs)
-        if (DL.DisplayListSeg == DisplayList) return;
+    if (std::find(CallStack.begin(), CallStack.end(), DisplayList) != CallStack.end()) {
+        return; 
+    }
+    CallStack.push_back(DisplayList);
 
-    DLs.push_back({ DisplayList, Entry });
+    bool isNewDL = true;
+    for (const auto &DL : DLs) {
+        if (DL.DisplayListSeg == DisplayList) {
+            isNewDL = false;
+            break;
+        }
+    }
+    if (isNewDL) {
+        DLs.push_back({ DisplayList, Entry });
+    }
 
     while (true) {
         u32 W0 = Rom.ReadBytes<u32>(Entry);
         u32 W1 = Rom.ReadBytes<u32>(Entry + 4);
         u8 Cmd = W0 >> 24;
-        //printf("0x%x Gfxcmd: 0x%x\n", Entry, Cmd);
+        
         ParseRDPTileCommand(Textures, W0, W1, Cmd, false, false, nullptr);
+        
         if (Rom.mMicrocode == UCODE_F3D) {
             if (Cmd == (u8)G_ENDDL) break;
             switch (Cmd) {
-                case G_VTX:{ 
-                    Vertices.push_back({ (W1), W1, (C0(0, 16)) / 16 });
-                } 
-                break;
+                case G_VTX: Vertices.push_back({ (W1), W1, (C0(0, 16)) / 16 }); break;
                 case G_MOVEMEM: (C0(16, 8) == 0x88 ? Ambients : Lights).push_back({ (W1), W1 }); break;
                 case G_DL: {
                     bool Branch = (C0(16, 1) == 0x01);
-                    if (ValidateMemAddr(W1)) ParseDisplayListRecursive(Rom, W1, Vertices, Ambients, Lights, Textures, DLs);
-                    else printf("DisplayList 0x%08x has an invalid address, ignoring export\n", W1);
-                    if (Branch) return;
-                    break;
-                }
-                case (u8)G_TRI1: {
-                    if (!Textures.empty()) {
-                        F3DTexture &Cur = Textures.back();
-                        if (Cur.Texture != 0) {
-                            F3DTexture Cpy = Cur;
-                            Cpy.Texture = 0;
-                            Cpy.TextureSeg = 0;
-                            Cpy.Length = 0;
-                            Cpy.Width = 0;
-                            Cpy.Height = 0;
-
-                            Textures.push_back(Cpy);
-                        }
+                    if (ValidateMemAddr(W1)) {
+                        ParseDisplayListRecursive(Rom, W1, Vertices, Ambients, Lights, Textures, DLs, CallStack);
+                    } else {
+                        printf("DisplayList 0x%08x has an invalid address, ignoring export\n", W1);
                     }
+                    if (Branch) return;
                     break;
                 }
             }
         } else if (Rom.mMicrocode == UCODE_F3DEX2) {
             if (Cmd == (u8)0xdf) break;
             switch (Cmd) {
-                case 0x01:{ 
-                    Vertices.push_back({ (W1), W1, (C0(12, 8))});
-                   // printf("New Vtx: 0x%x\n", W1);
-                } 
-                break;
+                case 0x01: Vertices.push_back({ (W1), W1, (C0(12, 8))}); break;
                 case 0xde: {
                     bool Branch = (C0(16, 1) == 0x01);
-                    if (ValidateMemAddr(W1)) ParseDisplayListRecursive(Rom, W1, Vertices, Ambients, Lights, Textures, DLs);
-                    else printf("DisplayList 0x%08x has an invalid address, ignoring export\n", W1);
-                    if (Branch) return;
-                    break;
-                }
-                case (u8)0x05:
-                case (u8)0x06: {
-                    if (!Textures.empty()) {
-                        F3DTexture &Cur = Textures.back();
-                        if (Cur.Texture != 0) {
-                            F3DTexture Cpy = Cur;
-                            Cpy.Texture = 0;
-                            Cpy.TextureSeg = 0;
-                            Cpy.Length = 0;
-                            Cpy.Width = 0;
-                            Cpy.Height = 0;
-                            Textures.push_back(Cpy);
-                        }
+                    if (ValidateMemAddr(W1)) {
+                        ParseDisplayListRecursive(Rom, W1, Vertices, Ambients, Lights, Textures, DLs, CallStack);
+                    } else {
+                        printf("DisplayList 0x%08x has an invalid address, ignoring export\n", W1);
                     }
+                    if (Branch) return;
                     break;
                 }
             }
         } else if (Rom.mMicrocode == UCODE_F3DEX) {
             if (Cmd == (u8)G_ENDDL) break;
             switch (Cmd) {
-                case G_VTX:{ 
-                    Vertices.push_back({ (W1), W1, (C0(10, 6)) });
-                } 
-                break;
+                case G_VTX: Vertices.push_back({ (W1), W1, (C0(10, 6)) }); break;
                 case G_MOVEMEM: (C0(16, 8) == 0x88 ? Ambients : Lights).push_back({ (W1), W1 }); break;
-                
                 case G_DL: {
                     bool Branch = (C0(16, 1) == 0x01);
-                    if (ValidateMemAddr(W1)) ParseDisplayListRecursive(Rom, W1, Vertices, Ambients, Lights, Textures, DLs);
-                    else printf("DisplayList 0x%08x has an invalid address, ignoring export\n", W1);
-                    if (Branch) return;
-                    break;
-                }
-                //guess end of texture
-                case (u8)(G_IMMFIRST-14):
-                case (u8)G_TRI1: {
-                    if (!Textures.empty()) {
-                        F3DTexture &Cur = Textures.back();
-                        if (Cur.Texture != 0) {
-                            F3DTexture Cpy = Cur;
-                            Cpy.Texture = 0;
-                            Cpy.TextureSeg = 0;
-                            Cpy.Length = 0;
-                            Cpy.Width = 0;
-                            Cpy.Height = 0;
-                            Textures.push_back(Cpy);
-                        }
+                    if (ValidateMemAddr(W1)) {
+                        ParseDisplayListRecursive(Rom, W1, Vertices, Ambients, Lights, Textures, DLs, CallStack);
+                    } else {
+                        printf("DisplayList 0x%08x has an invalid address, ignoring export\n", W1);
                     }
+                    if (Branch) return;
                     break;
                 }
             }
         }
-
         Entry += 8;
     }
 }
@@ -487,11 +443,16 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, std::string LvlName, u8 Area
         }
     }
 
+    std::set<u32> ExportedVertices;
+    std::set<u32> ExportedAmbients;
+    std::set<u32> ExportedLights;
+    std::set<u32> ExportedTextures;
+
     for (const auto &V : Vertices) {
-        if (V.Vtx == 0 || !ValidateMemAddr(V.Vtx)) {
-            printf("Vertex 0x%08x has an invalid address, ignoring export\n", V.Vtx);
-            continue;
-        }
+        if (!ValidateMemAddr(V.Vtx)) continue;
+        if (ExportedVertices.count(V.VtxSeg)) continue;
+        ExportedVertices.insert(V.VtxSeg);
+
         fprintf(ModelDump, "Vtx %s_vertex_0x%x[] = {\n", GetPlaceHolderName().c_str(), V.VtxSeg);
         for (u32 I = 0; I < V.Size; I++) {
             u32 Addr = V.Vtx + I * 16;
@@ -512,10 +473,10 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, std::string LvlName, u8 Area
     }
 
     for (const auto &A : Ambients) {
-        if (A.Light == 0 || !ValidateMemAddr(A.Light)) {
-            //printf("Ambient Light 0x%08x has an invalid address, ignoring export\n", A.Light);
-            continue;
-        }
+        if (!ValidateMemAddr(A.Light)) continue;
+        if (ExportedAmbients.count(A.LightSeg)) continue;
+        ExportedAmbients.insert(A.LightSeg);
+
         fprintf(ModelDump, "Ambient_t %s_light_0x%x[] = {\n", GetPlaceHolderName().c_str(), A.LightSeg);
         u32 Addr = A.Light;
         fprintf(ModelDump, "    { %u, %u, %u}, 0, { %u, %u, %u}, 0\n",
@@ -525,10 +486,10 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, std::string LvlName, u8 Area
     }
 
     for (const auto &L : Lights) {
-        if (L.Light == 0 || !ValidateMemAddr(L.Light)) {
-            //printf("Light 0x%08x has an invalid address, ignoring export\n", L.Light);
-            continue;
-        }
+        if (!ValidateMemAddr(L.Light)) continue;
+        if (ExportedLights.count(L.LightSeg)) continue;
+        ExportedLights.insert(L.LightSeg);
+
         fprintf(ModelDump, "Light_t %s_light_0x%x[] = {\n", GetPlaceHolderName().c_str(), L.LightSeg);
         u32 Addr = L.Light;
         fprintf(ModelDump, "    { %u, %u, %u}, 0, { %u, %u, %u}, 0, { %d, %d, %d}, 0\n",
@@ -539,10 +500,10 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, std::string LvlName, u8 Area
     }
 
     for (auto &T : Textures) {
-        if (T.Texture == 0 || !ValidateMemAddr(T.Texture)) {
-            if (T.Texture) printf("Texture 0x%08x has an invalid address, ignoring export\n", T.Texture);
-            continue;
-        }
+        if (!ValidateMemAddr(T.Texture)) continue;
+        if (ExportedTextures.count(T.TextureSeg)) continue;
+        ExportedTextures.insert(T.TextureSeg);
+
         fprintf(ModelDump, "u8 %s_texture_0x%x[] = {\n", GetPlaceHolderName().c_str(), T.TextureSeg);
         u16 Width = T.Width ? T.Width : 32;
         u16 Height = T.Height ? T.Height : 32;
@@ -550,8 +511,6 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, std::string LvlName, u8 Area
 
         if (T.Length == 0) {
             T.Length = ((pixels + 1) * (u32)T.BitDepth) / 8;
-            //printf("Length 0 but has pixels %u\n", pixels);
-            //continue;
         }
 
         std::vector<u8> src(T.Length*2);
@@ -580,7 +539,6 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, std::string LvlName, u8 Area
                 else if (T.BitDepth == 16) BinImg::DecodeIA16(src.data(), rgba.data(), pixels);
                 break;
             default:
-                printf("Unknown format for texture 0x%x, using RGBA\n", T.Texture);
                 T.ImgType = F3D_IMG_RGBA;
                 break;
         }
@@ -630,7 +588,6 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, std::string LvlName, u8 Area
                         u32 NextW0 = Rom.ReadBytes<u32>(Entry+8);
                         u32 NextW1 = Rom.ReadBytes<u32>(Entry+12);
                         u8 NextCmd = NextW0 >> 24;
-                        // try optimize
                         if (NextCmd == 0xbf) {
                             fprintf(ModelDump, "    gsSP2Triangles(%u, %u, %u, 0, ", C1(16, 8) / 10, C1(8, 8) / 10, C1(0, 8) / 10);
                             W0 = NextW0;

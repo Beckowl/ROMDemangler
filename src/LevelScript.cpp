@@ -65,7 +65,7 @@ std::vector<u8> LevelScript::DecompressSegment(N64Rom &Rom, u8 Segment, u32 RomS
     } else if (HeaderMagic[0] == 'Y' && HeaderMagic[1] == 'A' && HeaderMagic[2] == 'Y' && HeaderMagic[3] == '0') {
             return DecompressYAY0(Rom, RomStart);
     } else {
-        printf("Tried to decompress segment 0x%02x which is not compressed", Segment);
+        printf("Tried to decompress segment 0x%02x which is not compressed\n", Segment);
         u32 Size = RomEnd - RomStart;
         std::vector<u8> SegData;
         SegData.resize(Size);
