@@ -151,7 +151,7 @@ void ParseRDPTileCommand(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 C
                 u32 ImgType = C0(21, 3);
                 u32 BitDepth = GetBitDepthFromSize(C0(19, 2));
 
-                if (!Textures.empty()) {
+                if (!Textures.empty() && ImgType != F3D_IMG_CI) {
                     F3DTexture &Current = Textures.back();
                     if (Current.Texture != 0 && Current.Texture != W1) {
                         F3DTexture NewTex = Current; 
@@ -273,7 +273,7 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList,
     u32 Entry = (DisplayList);
 
     if (std::find(CallStack.begin(), CallStack.end(), DisplayList) != CallStack.end()) {
-        return; 
+        return;
     }
     CallStack.push_back(DisplayList);
 
