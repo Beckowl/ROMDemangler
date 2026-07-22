@@ -40,6 +40,14 @@ std::map<u8, std::string> LevelNames = {
     {36, "ttm"}
 };
 
+std::string GetLevelName(u16 ID) {
+    if (!LevelNames.contains(ID)) {
+        return std::format("ext_level_{}", ID);
+    } else {
+        return LevelNames[ID];
+    }
+}
+
 u32 LevelScript::SegmentedToROM(u32 Addr) {
     u8 Bank = Addr >> 24;
     u32 Offset = Addr & 0xFFFFFF;
@@ -881,7 +889,7 @@ void ExportAreas(N64Rom &Rom, LevelScript &Script, std::string LvlName) {
 }
 
 void ExportLevel(N64Rom &Rom, u8 LvlID) {
-    std::string LvlName = LevelNames[LvlID];
+    std::string LvlName = GetLevelName(LvlID);
     mkdir("output/levels", 0777);
     mkdir(("output/levels/" + LvlName).c_str(), 0777);
     std::string ScriptPath = "output/levels/" + LvlName + "/script.c";
