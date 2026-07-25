@@ -1,6 +1,7 @@
 #include "GeoLayout.h"
 #include "Actor.h"
 #include "LevelScript.h"
+#include "Memory.h"
 
 std::map<u32, bool> ProcessedGeos;
 

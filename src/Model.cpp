@@ -1,6 +1,7 @@
 #include "Model.h"
 #include "LevelScript.h"
 #include "Actor.h"
+#include "Memory.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"

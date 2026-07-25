@@ -1,6 +1,7 @@
 #include "LevelScript.h"
 #include "Coop.h"
 #include "Decompress.h"
+#include "Memory.h"
 #include "cxxopts.hpp"
 
 bool VerbosePrinting = false;
@@ -216,8 +217,8 @@ int main(int argc, char** argv) {
     printf((GameTypeStr + "\n").c_str());
 
     std::error_code ErrCode;
-    if (std::filesystem::exists("output")) std::filesystem::remove_all("output", ErrCode);
-    mkdir("output", 0777);
+    if (fs::exists("output")) fs::remove_all("output", ErrCode);
+    fs::create_directories("output");
 
     for (const int &LvlID : LvlIDs) {
         ExportLevel(Rom, LvlID);

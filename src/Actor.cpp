@@ -2,6 +2,8 @@
 #include "LevelScript.h"
 #include "GeoLayout.h"
 #include "Model.h"
+#include "Memory.h"
+
 
 std::map<u32, bool> ExportedActors;
 
@@ -48,7 +50,7 @@ void ExtractGeoDisplayLists(N64Rom &Rom, u32 SegAddr, std::vector<u32> &OutDLs, 
 
 void ExportActors(N64Rom &Rom, LevelScript &Script) {
     std::string ActorsPath = "output/actors";
-    mkdir(ActorsPath.c_str(), 0777);
+    fs::create_directories(ActorsPath);
 
     for (auto &Act : Script.Actors) {
         if (!ValidateMemAddr(Act.Addr)) {
@@ -58,7 +60,7 @@ void ExportActors(N64Rom &Rom, LevelScript &Script) {
         if (ExportedActors[Act.Addr] && (Act.Addr >> 24) == 0) continue;
         
         std::string ActorFolder = (ActorsPath + "/" + Act.Name);
-        mkdir(ActorFolder.c_str(), 0777);
+        fs::create_directories(ActorFolder);
 
         Script.CurrentActor = &Act;
 

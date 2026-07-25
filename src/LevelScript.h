@@ -39,10 +39,6 @@ public:
     std::string Name = "";
     Actor *CurrentActor = nullptr;
 
-    u32 SegmentedToROM(u32 Addr);
-    std::vector<u8> DecompressSegment(N64Rom &Rom, u8 Segment, u32 RomStart, u32 RomEnd);
-    void LoadSegment(N64Rom &Rom, u8 Segment, u32 RomStart, u32 RomEnd, bool Decompress = false);
-
     // these are from Quad64
     bool IsPerAreaBank0x0E(void);
     void SetAreaSegmented0x0E(N64Rom &Rom, u8 AreaID);

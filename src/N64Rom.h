@@ -2,7 +2,6 @@
 
 #include "ultratypes.h"
 #include "Global.h"
-#include "Memory.h"
 
 #include <cstdio>
 #include <cstring>
@@ -28,6 +27,9 @@ enum N64Microcode {
 
 extern enum SM64GameType GameType;
 extern bool ExportSegment0;
+
+extern std::vector<u8> SegmentData[MAX_SEGMENT];
+extern u32 SegmentOffsets[MAX_SEGMENT][2];
 
 class N64Rom {
 public:

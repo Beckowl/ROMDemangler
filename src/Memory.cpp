@@ -1,4 +1,5 @@
 #include "Memory.h"
+#include "Decompress.h"
 #include "Main.h"
 #include <format>
 
@@ -62,4 +63,65 @@ bool ValidateMemAddr(u32 Address) {
         return false;
     }
     return true;
+}
+
+u32  SegmentedToROM(u32 Addr) {
+    u8 Bank = Addr >> 24;
+    u32 Offset = Addr & 0xFFFFFF;
+    u32 Start = SegmentOffsets[Bank][0];
+    u32 End = SegmentOffsets[Bank][1];
+    u32 Result = Start + Offset;
+
+    return Result;
+}
+
+std::vector<u8> DecompressSegment(N64Rom &Rom, u8 Segment, u32 RomStart, u32 RomEnd) {
+    u8 HeaderMagic[4] = {
+        Rom.ReadBytesPhysical<u8>(RomStart),
+        Rom.ReadBytesPhysical<u8>(RomStart+1),
+        Rom.ReadBytesPhysical<u8>(RomStart+2),
+        Rom.ReadBytesPhysical<u8>(RomStart+3),
+    };
+
+    if (HeaderMagic[0] == 'M' && HeaderMagic[1] == 'I' && HeaderMagic[2] == 'O' && HeaderMagic[3] == '0') {
+        return DecompressMIO0(Rom, RomStart);
+    } else if (HeaderMagic[0] == 'R' && HeaderMagic[1] == 'N' && HeaderMagic[2] == 'C') {
+        return DecompressRNC(Rom, RomStart);
+    } else if (HeaderMagic[0] == 'Y' && HeaderMagic[1] == 'A' && HeaderMagic[2] == 'Y' && HeaderMagic[3] == '0') {
+            return DecompressYAY0(Rom, RomStart);
+    } else {
+        printf("Tried to decompress segment 0x%02x which is not compressed\n", Segment);
+        u32 Size = RomEnd - RomStart;
+        std::vector<u8> SegData;
+        SegData.resize(Size);
+        Rom.ReadBytesPtr<u8>(RomStart, SegData.data(), Size);
+        return SegData;
+    }
+
+    return {};
+}
+
+void LoadSegment(N64Rom &Rom, u8 Segment, u32 RomStart, u32 RomEnd, bool Decompress) {
+    SegmentOffsets[Segment][0] = RomStart;
+    SegmentOffsets[Segment][1] = RomEnd;
+
+    if (RomEnd <= RomStart) {
+        SegmentData[Segment].clear();
+        return;
+    }
+
+    if (Decompress) {
+        SegmentData[Segment] = DecompressSegment(Rom, Segment, RomStart, RomEnd);
+
+        if (VerbosePrinting) {
+            printf("Loaded Compressed Segment 0x%02X: 0x%08X - 0x%08X\n", Segment, RomStart, RomEnd);
+        }
+    } else {
+        u32 Size = RomEnd - RomStart;
+        SegmentData[Segment].resize(Size);
+        Rom.ReadBytesPtr<u8>(RomStart, SegmentData[Segment].data(), Size);
+        if (VerbosePrinting) {
+            printf("Loaded Segment 0x%02X: 0x%08X - 0x%08X\n", Segment, RomStart, RomEnd);
+        }
+    }
 }

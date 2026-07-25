@@ -5,6 +5,7 @@
 #include "Collision.h"
 #include "MovingTexture.h"
 #include "Model.h"
+#include "Memory.h"
 
 std::map<u8, std::string> LevelNames = {
     {4, "bbh"},
@@ -45,67 +46,6 @@ std::string GetLevelName(u16 ID) {
         return std::format("ext_level_{}", ID);
     } else {
         return LevelNames[ID];
-    }
-}
-
-u32 LevelScript::SegmentedToROM(u32 Addr) {
-    u8 Bank = Addr >> 24;
-    u32 Offset = Addr & 0xFFFFFF;
-    u32 Start = SegmentOffsets[Bank][0];
-    u32 End = SegmentOffsets[Bank][1];
-    u32 Result = Start + Offset;
-
-    return Result;
-}
-
-std::vector<u8> LevelScript::DecompressSegment(N64Rom &Rom, u8 Segment, u32 RomStart, u32 RomEnd) {
-    u8 HeaderMagic[4] = {
-        Rom.ReadBytesPhysical<u8>(RomStart),
-        Rom.ReadBytesPhysical<u8>(RomStart+1),
-        Rom.ReadBytesPhysical<u8>(RomStart+2),
-        Rom.ReadBytesPhysical<u8>(RomStart+3),
-    };
-
-    if (HeaderMagic[0] == 'M' && HeaderMagic[1] == 'I' && HeaderMagic[2] == 'O' && HeaderMagic[3] == '0') {
-        return DecompressMIO0(Rom, RomStart);
-    } else if (HeaderMagic[0] == 'R' && HeaderMagic[1] == 'N' && HeaderMagic[2] == 'C') {
-        return DecompressRNC(Rom, RomStart);
-    } else if (HeaderMagic[0] == 'Y' && HeaderMagic[1] == 'A' && HeaderMagic[2] == 'Y' && HeaderMagic[3] == '0') {
-            return DecompressYAY0(Rom, RomStart);
-    } else {
-        printf("Tried to decompress segment 0x%02x which is not compressed\n", Segment);
-        u32 Size = RomEnd - RomStart;
-        std::vector<u8> SegData;
-        SegData.resize(Size);
-        Rom.ReadBytesPtr<u8>(RomStart, SegData.data(), Size);
-        return SegData;
-    }
-
-    return {};
-}
-
-void LevelScript::LoadSegment(N64Rom &Rom, u8 Segment, u32 RomStart, u32 RomEnd, bool Decompress) {
-    SegmentOffsets[Segment][0] = RomStart;
-    SegmentOffsets[Segment][1] = RomEnd;
-
-    if (RomEnd <= RomStart) {
-        SegmentData[Segment].clear();
-        return;
-    }
-
-    if (Decompress) {
-        SegmentData[Segment] = DecompressSegment(Rom, Segment, RomStart, RomEnd);
-
-        if (VerbosePrinting) {
-            printf("Loaded Compressed Segment 0x%02X: 0x%08X - 0x%08X\n", Segment, RomStart, RomEnd);
-        }
-    } else {
-        u32 Size = RomEnd - RomStart;
-        SegmentData[Segment].resize(Size);
-        Rom.ReadBytesPtr<u8>(RomStart, SegmentData[Segment].data(), Size);
-        if (VerbosePrinting) {
-            printf("Loaded Segment 0x%02X: 0x%08X - 0x%08X\n", Segment, RomStart, RomEnd);
-        }
     }
 }
 
@@ -210,7 +150,7 @@ std::string LvlCmdExec(N64Rom &Rom, LevelScript &Script, u32 &Start) {
     u32 RomEnd = Rom.ReadBytes<u32>(Start + 8, false);
     u32 ScriptEntry = Rom.ReadBytes<u32>(Start + 12, false);
 
-    Script.LoadSegment(Rom, Segment, RomStart, RomEnd);
+    LoadSegment(Rom, Segment, RomStart, RomEnd);
 
     u32 Saved = Start + 0x10;
     Script.Stack.push_back(Saved);
@@ -220,7 +160,7 @@ std::string LvlCmdExec(N64Rom &Rom, LevelScript &Script, u32 &Start) {
 	Script.StackBase=Script.StackTop;
     Start = ScriptEntry;
 
-    if (VerbosePrinting) printf("Jump exec to 0x%x and save 0x%x (0x%x)\n", ScriptEntry, Saved, Script.SegmentedToROM(Saved));
+    if (VerbosePrinting) printf("Jump exec to 0x%x and save 0x%x (0x%x)\n", ScriptEntry, Saved, SegmentedToROM(Saved));
 
     std::string OutArgs = std::format(
         "{:#x}, {:#x}, {:#x}, {:#x}",
@@ -244,7 +184,7 @@ std::string LvlCmdExitAndExec(N64Rom &Rom, LevelScript &Script, u32 &Start) {
     u32 RomEnd = Rom.ReadBytes<u32>(Start + 8, false);
     u32 ScriptEntry = Rom.ReadBytes<u32>(Start + 12, false);
 
-    Script.LoadSegment(Rom, Segment, RomStart, RomEnd);
+    LoadSegment(Rom, Segment, RomStart, RomEnd);
 
     Script.StackTop = Script.StackBase;
     Start = (ScriptEntry);
@@ -342,7 +282,7 @@ std::string LvlCmdJumpLink(N64Rom &Rom, LevelScript &Script, u32 &Start) {
         Start = Target;
     }
 
-    if (VerbosePrinting) printf("Push Current address & Jump to 0x%x and save 0x%x (0x%x)\n", Target, Saved, Script.SegmentedToROM(Saved));
+    if (VerbosePrinting) printf("Push Current address & Jump to 0x%x and save 0x%x (0x%x)\n", Target, Saved, SegmentedToROM(Saved));
 
     return OutArgs;
 };
@@ -430,7 +370,7 @@ std::string LvlCmdLoadRaw(N64Rom &Rom, LevelScript &Script, u32 &Start) {
     u32 RomStart = Rom.ReadBytes<u32>(Start + 4, false);
     u32 RomEnd = Rom.ReadBytes<u32>(Start + 8, false);
 
-    Script.LoadSegment(Rom, Segment, RomStart, RomEnd);
+    LoadSegment(Rom, Segment, RomStart, RomEnd);
 
     std::string OutArgs = std::format(
         "{:#x}, {:#x}, {:#x}",
@@ -452,7 +392,7 @@ std::string LvlCmdLoadMio0(N64Rom &Rom, LevelScript &Script, u32 &Start) {
     u32 RomStart = Rom.ReadBytes<u32>(Start + 4, false);
     u32 RomEnd = Rom.ReadBytes<u32>(Start + 8, false);
 
-    Script.LoadSegment(Rom, Segment, RomStart, RomEnd, true);
+    LoadSegment(Rom, Segment, RomStart, RomEnd, true);
 
     std::string OutArgs = std::format(
         "{:#x}, {:#x}, {:#x}",
@@ -862,7 +802,7 @@ bool IsJumpLvlCmd(u8 Cmd) {
 
 void ExportAreas(N64Rom &Rom, LevelScript &Script, std::string LvlName) {
     std::string AreasPath = "output/levels/"+LvlName+"/areas";
-    mkdir(AreasPath.c_str(), 0777);
+    fs::create_directories(AreasPath);
     for (auto &I : Script.Areas) {
         u32 GeoSegAddr = Script.AreaDatas[I].GeoLayout;
         u32 ColSegAddr = Script.AreaDatas[I].Collision;
@@ -872,7 +812,7 @@ void ExportAreas(N64Rom &Rom, LevelScript &Script, std::string LvlName) {
         char AreaIDStr[20];
         snprintf(AreaIDStr, 20, "%u", I);
         std::string AreaStrNum = AreasPath+"/"+AreaIDStr;
-        mkdir(AreaStrNum.c_str(), 0777);
+        fs::create_directories(AreaStrNum);
         std::string GeoDumpPath = AreaStrNum + "/geo.inc.c";
         ExportGeolayout(Rom, I, LvlName, GeoSegAddr, GeoSegAddr, Script, GeoDumpPath.c_str());
         std::string ColDumpPath = AreaStrNum + "/collision.inc.c";
@@ -890,8 +830,8 @@ void ExportAreas(N64Rom &Rom, LevelScript &Script, std::string LvlName) {
 
 void ExportLevel(N64Rom &Rom, u8 LvlID) {
     std::string LvlName = GetLevelName(LvlID);
-    mkdir("output/levels", 0777);
-    mkdir(("output/levels/" + LvlName).c_str(), 0777);
+    fs::create_directories("output/levels");
+    fs::create_directories("output/levels/" + LvlName);
     std::string ScriptPath = "output/levels/" + LvlName + "/script.c";
     FILE *ScriptDump = fopen(ScriptPath.c_str(), "w");
     LevelScript Script;
