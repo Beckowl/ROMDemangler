@@ -2,12 +2,18 @@
 #include "Decompress.h"
 #include "Main.h"
 #include <format>
+#include <unordered_map>
 
 std::vector<u8> SegmentData[MAX_SEGMENT];
 u32 SegmentOffsets[MAX_SEGMENT][2] = {0};
-FILE *MapFile = fopen("sm64.us.map", "r");
+static std::unordered_map<u32, std::string> SymbolMap;
 
-std::string GetLabelFromMap(u32 Address) {
+void InitMemoryMap() {
+    SymbolMap.clear();
+
+    FILE *MapFile = fopen("sm64.us.map", "r");
+    if (!MapFile) return;
+
     rewind(MapFile);
 
     char Line[1024];
@@ -17,38 +23,39 @@ std::string GetLabelFromMap(u32 Address) {
             Line[--n] = '\0';
         }
 
-        char Tmp[1024];
-        strncpy(Tmp, Line, sizeof(Tmp));
-        Tmp[sizeof(Tmp)-1] = '\0';
+        if (n == 0) continue;
 
         char *Tokens[64];
         int TCount = 0;
-        char *Token = strtok(Tmp, " \t");
-        while (Token && TCount < (int)(sizeof(Tokens)/sizeof(Tokens[0]))) {
+        char *Token = strtok(Line, " \t");
+        while (Token && TCount < 64) {
             Tokens[TCount++] = Token;
             Token = strtok(NULL, " \t");
         }
 
         if (TCount == 0) continue;
 
+        std::string Label = Tokens[TCount - 1];
+
         for (int i = 0; i < TCount; ++i) {
             char *End = NULL;
             unsigned long Val = strtoul(Tokens[i], &End, 16);
-            if (End == Tokens[i]) continue;
-            if (*End != '\0') continue;
 
-            if ((u32)Val == Address) {
-                char *Label = Tokens[TCount - 1];
-                return std::string(Label);
-            }
+            if (End == Tokens[i] || *End != '\0') continue;
+
+            SymbolMap[(u32)Val] = Label;
         }
     }
+    fclose(MapFile);
+}
 
-    std::string Buf = std::format(
-        "Custom_{:#x}", 
-        Address
-    );
-    return Buf;
+std::string GetLabelFromMap(u32 Address) {
+    auto it = SymbolMap.find(Address);
+    if (it != SymbolMap.end()) {
+        return it->second;
+    }
+
+    return std::format("Custom_{:#x}", Address);
 }
 
 bool ValidateMemAddr(u32 Address) {

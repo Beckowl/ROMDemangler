@@ -10,8 +10,8 @@
 
 extern std::vector<u8> SegmentData[MAX_SEGMENT];
 extern u32 SegmentOffsets[MAX_SEGMENT][2];
-extern FILE *MapFile;
 
+extern void InitMemoryMap();
 extern std::string GetLabelFromMap(u32 Address);
 extern bool ValidateMemAddr(u32 Address);
 extern u32 SegmentedToROM(u32 Addr);

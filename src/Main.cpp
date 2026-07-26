@@ -156,6 +156,7 @@ int main(int argc, char** argv) {
 
     N64Rom Rom;
     Rom.OpenFile(RomPath.c_str(), ExportSegment0 ? RAMPath.c_str() : nullptr);
+    InitMemoryMap();
 
     std::string GameTypeStr = "ROM is made with ";
 
@@ -226,6 +227,5 @@ int main(int argc, char** argv) {
 
     ExportLua(Rom);
     Rom.CloseFile();
-    fclose(MapFile);
     return 0;
 }
