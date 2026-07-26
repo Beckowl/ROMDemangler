@@ -135,7 +135,7 @@ F3DTexture &EnsureActiveTexture(std::vector<F3DTexture> &Textures) {
     return Textures.back();
 }
 
-void ParseRDPTileCommand(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd, bool Write, bool IsActor = false, Actor *Act = nullptr, FILE *ModelDump = nullptr, std::string LvlName="", u8 Area=0) {
+void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd, bool Write, bool IsActor = false, Actor *Act = nullptr, FILE *ModelDump = nullptr, std::string LvlName="", u8 Area=0) {
     if (!Write) {
         auto GetBitDepthFromSize = [](u32 size) {
             switch (size) {
@@ -294,7 +294,7 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList,
         u32 W1 = Rom.ReadBytes<u32>(Entry + 4);
         u8 Cmd = W0 >> 24;
         
-        ParseRDPTileCommand(Textures, W0, W1, Cmd, false, false, nullptr);
+        ParseRDPCommands(Textures, W0, W1, Cmd, false, false, nullptr);
         
         if (Rom.mMicrocode == UCODE_F3D) {
             if (Cmd == (u8)G_ENDDL) break;
@@ -568,7 +568,7 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, std::string LvlName, u8 Area
             u32 W1 = Rom.ReadBytes<u32>(Entry+4);
             u8 Cmd = W0 >> 24;
             bool ShouldEnd = false;
-            ParseRDPTileCommand(Textures, W0, W1, Cmd, true, IsActor, Act, ModelDump, LvlName, Area);
+            ParseRDPCommands(Textures, W0, W1, Cmd, true, IsActor, Act, ModelDump, LvlName, Area);
 
             if (Rom.mMicrocode == UCODE_F3D) {
                 if (Cmd == (u8)G_ENDDL) { fprintf(ModelDump, "    gsSPEndDisplayList(),\n};\n\n"); break; }
