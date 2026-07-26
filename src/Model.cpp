@@ -175,7 +175,7 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
                 u32 Siz = C0(19, 2);
 
                 Tex.Tile = Tile;
-                if (Tile != 7) {
+                if (Tile != G_TX_LOADTILE) {
                     Tex.ImgType = (F3DImageType)FMT;
                     Tex.BitDepth = GetBitDepthFromSize(Siz);
                 }
@@ -196,7 +196,7 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
                 F3DTexture &Tex = EnsureActiveTexture(Textures);
                 u32 Tile = C1(24, 3);
 
-                if (Tile != 7) {
+                if (Tile != G_TX_LOADTILE) {
                     u16 Uls = C0(12, 12);
                     u16 Ult = C0(0, 12);
                     u16 Lrs = C1(12, 12);
