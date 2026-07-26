@@ -11,6 +11,11 @@ void ExtractGeoDisplayLists(N64Rom &Rom, u32 SegAddr, std::vector<u32> &OutDLs, 
     if (!SegAddr || SeenGeos[SegAddr]) return;
     SeenGeos[SegAddr] = true;
 
+    auto PushDL = [&](u32 DL) {
+        if (ValidateMemAddr(DL)) OutDLs.push_back(DL);
+        else if (DL) printf("DisplayList 0x%08x has an invalid address, ignoring export\n", DL);
+    };
+
     u32 Entry = SegAddr;
     while (true) {
         u8 Cmd = Rom.ReadBytes<u8>(Entry);
@@ -25,22 +30,33 @@ void ExtractGeoDisplayLists(N64Rom &Rom, u32 SegAddr, std::vector<u32> &OutDLs, 
         } else if (Cmd == 0x11) {
             if (Rom.ReadBytes<u8>(Entry + 1) & 0x80) {
                 u32 DL = Rom.ReadBytes<u32>(Entry + 8);
-                if (ValidateMemAddr(DL)) OutDLs.push_back(DL);
-                else if (DL) printf("DisplayList 0x%08x has an invalid address, ignoring export\n", DL);
+                PushDL(DL);
             }
         } else if (Cmd == 0x13) {
             u32 DL = Rom.ReadBytes<u32>(Entry + 8);
-            if (ValidateMemAddr(DL)) OutDLs.push_back(DL);
-            else if (DL) printf("DisplayList 0x%08x has an invalid address, ignoring export\n", DL);
+            PushDL(DL);
         } else if (Cmd == 0x15) {
             u32 DL = Rom.ReadBytes<u32>(Entry + 4);
-            if (ValidateMemAddr(DL)) OutDLs.push_back(DL);
-            else if (DL) printf("DisplayList 0x%08x has an invalid address, ignoring export\n", DL);
+            PushDL(DL);
         } else if (Cmd == 0x1D) {
             if (Rom.ReadBytes<u8>(Entry + 1) & 0x80) {
                 u32 DL = Rom.ReadBytes<u32>(Entry + 8);
-                if (ValidateMemAddr(DL)) OutDLs.push_back(DL);
-                else if (DL) printf("DisplayList 0x%08x has an invalid address, ignoring export\n", DL);
+                PushDL(DL);
+            }
+        } else if (Cmd == 0x10) {
+            u8 Layer = Rom.ReadBytes<u8>(Entry + 1);
+            if (Layer & 0x30) {
+                if (Layer & 0x80) {
+                    PushDL(Rom.ReadBytes<u32>(Entry + 4));
+                }
+            } else if (Layer & 0x20 || Layer & 0x10) {
+                if (Layer & 0x80) {
+                    PushDL(Rom.ReadBytes<u32>(Entry + 8));
+                }
+            } else {
+                if (Layer & 0x80) {
+                    PushDL(Rom.ReadBytes<u32>(Entry + 16));
+                }
             }
         }
 

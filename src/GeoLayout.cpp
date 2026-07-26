@@ -307,6 +307,172 @@ std::string GeoCmdCamera(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area) 
     return OutArgs;
 };
 
+std::string GeoCmdTransRot(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area) {
+    /**
+     * 0x10: Create translation & rotation scene graph node with optional display list
+     * Four different versions of 0x10
+     *   cmd+0x01: u8 params
+     *     0b1000_0000: if set, enable displayList field and drawingLayer
+     *     0b0111_0000: fieldLayout (determines how rest of data is formatted
+     *     0b0000_1111: drawingLayer
+     *
+     *   fieldLayout = 0: Translate & Rotate
+     *     0x04: s16 xTranslation
+     *     0x06: s16 yTranslation
+     *     0x08: s16 zTranslation
+     *     0x0A: s16 xRotation
+     *     0x0C: s16 yRotation
+     *     0x0E: s16 zRotation
+     *     0x10: [u32 displayList: if MSbit of params set, display list segmented address]
+     *
+    #define GEO_TRANSLATE_ROTATE(layer, tx, ty, tz, rx, ry, rz) \
+        CMD_BBH(0x10, (0x00 | layer), 0x0000), \
+        CMD_HHHHHH(tx, ty, tz, rx, ry, rz)
+    #define GEO_TRANSLATE_ROTATE_WITH_DL(layer, tx, ty, tz, rx, ry, rz, displayList) \
+        CMD_BBH(0x10, (0x00 | layer | 0x80), 0x0000), \
+        CMD_HHHHHH(tx, ty, tz, rx, ry, rz), \
+        CMD_PTR(displayList)
+
+    /**
+     *   fieldLayout = 1: Translate
+     *     0x02: s16 xTranslation
+     *     0x04: s16 yTranslation
+     *     0x06: s16 zTranslation
+     *     0x08: [u32 displayList: if MSbit of params set, display list segmented address]
+     *
+    #define GEO_TRANSLATE(layer, tx, ty, tz) \
+        CMD_BBH(0x10, (0x10 | layer), tx), \
+        CMD_HH(ty, tz)
+    #define GEO_TRANSLATE_WITH_DL(layer, tx, ty, tz, displayList) \
+        CMD_BBH(0x10, (0x10 | layer | 0x80), tx), \
+        CMD_HH(ty, tz), \
+        CMD_PTR(displayList)
+
+    /**
+     *   fieldLayout = 2: Rotate
+     *     0x02: s16 xRotation
+     *     0x04: s16 yRotation
+     *     0x06: s16 zRotation
+     *     0x08: [u32 displayList: if MSbit of params set, display list segmented address]
+     *
+    #define GEO_ROTATE(layer, rx, ry, rz) \
+        CMD_BBH(0x10, (0x20 | layer), rx), \
+        CMD_HH(ry, rz)
+    #define GEO_ROTATE_WITH_DL(layer, rx, ry, rz, displayList) \
+        CMD_BBH(0x10, (0x20 | layer | 0x80), rx), \
+        CMD_HH(ry, rz), \
+        CMD_PTR(displayList)
+
+    /**
+     *   fieldLayout = 3: Rotate Y
+     *     0x02: s16 yRotation
+     *     0x04: [u32 displayList: if MSbit of params set, display list segmented address]
+     *
+    #define GEO_ROTATE_Y(layer, ry) \
+        CMD_BBH(0x10, (0x30 | layer), ry)
+    #define GEO_ROTATE_Y_WITH_DL(layer, ry, displayList) \
+        CMD_BBH(0x10, (0x30 | layer | 0x80), ry), \
+        CMD_PTR(displayList)
+    */
+
+
+    u8 Layer = Rom.ReadBytes<u8>(Start + 1);
+
+    std::string OutArgs = "";
+    if (Layer & 0x30) {
+        s16 YRot = Rom.ReadBytes<s16>(Start + 2);
+
+        if (Layer & 0x80) {
+            u32 DisplayList = Rom.ReadBytes<u32>(Start + 4);
+            std::string DisplayListName = "0";
+            if (DisplayList) {
+                DisplayListName = GetGeoDLName(Script, Area, DisplayList);
+                Script.AreaDatas[Area].DisplayLists.push_back(DisplayList);
+            }
+            OutArgs = std::format(
+                "{}, {}, {}",
+                Layer & ~(0x80 | 0x30), YRot, DisplayListName
+            );
+        }
+
+        OutArgs = std::format(
+            "{}, {}",
+            Layer & ~0x30, YRot
+        );
+    } else if (Layer & 0x20) {
+        s16 XRot = Rom.ReadBytes<s16>(Start + 2);
+        s16 YRot = Rom.ReadBytes<s16>(Start + 4);
+        s16 ZRot = Rom.ReadBytes<s16>(Start + 6);
+
+        if (Layer & 0x80) {
+            u32 DisplayList = Rom.ReadBytes<u32>(Start + 8);
+            std::string DisplayListName = "0";
+            if (DisplayList) {
+                DisplayListName = GetGeoDLName(Script, Area, DisplayList);
+                Script.AreaDatas[Area].DisplayLists.push_back(DisplayList);
+            }
+            OutArgs = std::format(
+                "{}, {}, {}, {}, {}",
+                Layer & ~(0x80 | 0x20), XRot, YRot, ZRot, DisplayListName
+            );
+        }
+
+        OutArgs = std::format(
+            "{}, {}, {}, {}",
+            Layer & ~0x20, XRot, YRot, ZRot
+        );
+    } else if (Layer & 0x10) {
+        s16 XTrans = Rom.ReadBytes<s16>(Start + 2);
+        s16 YTrans = Rom.ReadBytes<s16>(Start + 4);
+        s16 ZTrans = Rom.ReadBytes<s16>(Start + 6);
+
+        if (Layer & 0x80) {
+            u32 DisplayList = Rom.ReadBytes<u32>(Start + 8);
+            std::string DisplayListName = "0";
+            if (DisplayList) {
+                DisplayListName = GetGeoDLName(Script, Area, DisplayList);
+                Script.AreaDatas[Area].DisplayLists.push_back(DisplayList);
+            }
+            OutArgs = std::format(
+                "{}, {}, {}, {}, {}",
+                Layer & ~(0x80 | 0x10), XTrans, YTrans, ZTrans, DisplayListName
+            );
+        }
+
+        OutArgs = std::format(
+            "{}, {}, {}, {}",
+            Layer & ~0x10, XTrans, YTrans, ZTrans
+        );
+    } else {
+        s16 XTrans = Rom.ReadBytes<s16>(Start + 4);
+        s16 YTrans = Rom.ReadBytes<s16>(Start + 6);
+        s16 ZTrans = Rom.ReadBytes<s16>(Start + 8);
+        s16 XRot = Rom.ReadBytes<s16>(Start + 10);
+        s16 YRot = Rom.ReadBytes<s16>(Start + 12);
+        s16 ZRot = Rom.ReadBytes<s16>(Start + 14);
+
+        if (Layer & 0x80) {
+            u32 DisplayList = Rom.ReadBytes<u32>(Start + 16);
+            std::string DisplayListName = "0";
+            if (DisplayList) {
+                DisplayListName = GetGeoDLName(Script, Area, DisplayList);
+                Script.AreaDatas[Area].DisplayLists.push_back(DisplayList);
+            }
+            OutArgs = std::format(
+                "{}, {}, {}, {}, {}, {}, {}, {}",
+                Layer & ~0x80, XTrans, YTrans, ZTrans, XRot, YRot, ZRot, DisplayListName
+            );
+        }
+
+        OutArgs = std::format(
+            "{}, {}, {}, {}, {}, {}, {}",
+            Layer, XTrans, YTrans, ZTrans, XRot, YRot, ZRot
+        );
+    }
+
+    return OutArgs;
+};
+
 std::string GeoCmdTransNode(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area) {
     /**
      * 0x11: Create translation scene graph node with optional display list
@@ -613,6 +779,37 @@ std::string GeoCmdBackground(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Ar
     return OutArgs;
 };
 
+std::string GeoCmdHeldObject(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area) {
+    /**
+     * 0x1C: Create a held object scene graph node
+     *  cmd+0x01: u8 unused
+     *  cmd+0x02: s16 offsetX
+     *  cmd+0x04: s16 offsetY
+     *  cmd+0x06: s16 offsetZ
+     *  cmd+0x08: GraphNodeFunc nodeFunc
+     *
+    #define GEO_HELD_OBJECT(param, ux, uy, uz, nodeFunc) \
+        CMD_BBH(0x1C, param, ux), \
+        CMD_HH(uy, uz), \
+        CMD_PTR(nodeFunc)
+    */
+
+    u8 Unused = Rom.ReadBytes<u8>(Start + 1);
+    s16 OffX = Rom.ReadBytes<s16>(Start + 2);
+    s16 OffY = Rom.ReadBytes<s16>(Start + 4);
+    s16 OffZ = Rom.ReadBytes<s16>(Start + 6);
+    u32 Func = Rom.ReadBytes<u32>(Start + 8);
+
+    std::string FuncName = GetLabelFromMap(Func);
+
+    std::string OutArgs = std::format(
+        "{}, {}, {}, {}, {}",
+        Unused, OffX, OffY, OffZ, FuncName
+    );
+
+    return OutArgs;
+};
+
 std::string GeoCmdScale(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area) {
     /**
      * 0x1D: Create scale scene graph node with optional display list
@@ -687,10 +884,10 @@ std::string (*GeoCommandsFunctions[])(N64Rom &Rom, LevelScript &Script, u32 &Sta
     GeoCmdStub,           GeoCmdStub,            (nullptr),             (nullptr),
     GeoCmdScreenArea,     GeoCmdOrtho,           GeoCmdCamFrustum,      GeoCmdStub,
     GeoCmdZbuffer,        GeoCmdRenderRange,     GeoCmdSwitchCase,      GeoCmdCamera,
-    (nullptr),            GeoCmdTransNode,       GeoCmdRotNode,         GeoCmdAnimatedPart,
+    GeoCmdTransRot,       GeoCmdTransNode,       GeoCmdRotNode,         GeoCmdAnimatedPart,
     GeoCmdBillboard,      GeoCmdDisplayList,     GeoCmdShadow,          GeoCmdStub,
     GeoCmdASM,            GeoCmdBackground,      (nullptr),             (nullptr),
-    (nullptr),            GeoCmdScale,           (nullptr),             (nullptr),
+    GeoCmdHeldObject,     GeoCmdScale,           (nullptr),             (nullptr),
     GeoCmdCullRadius,     (nullptr),             (nullptr),             (nullptr),
 };
 
@@ -716,6 +913,21 @@ u8 GetGeolayoutCmdSize(N64Rom &Rom, u32 Entry) {
             if (Layer & 0x80) return 12;
             return 8;
         }
+        case 0x10: { // GEO_TRANSLATE_ROTATE
+            u8 Layer = Rom.ReadBytes<u8>(Entry + 1);
+            if (Layer & 0x30) {
+                if (Layer & 0x80) return 8;
+                return 4;
+            } else if (Layer & 0x20 || Layer & 0x10) {
+                if (Layer & 0x80) return 12;
+                return 8;
+            } else {
+                if (Layer & 0x80) return 20;
+                return 16;
+            }
+        }
+        case 0x1C:
+            return 12;
         case 0x15:
         case 0x16:
         case 0x19:
@@ -783,6 +995,24 @@ std::string GetSpecialGeoCmdName(N64Rom &Rom, u8 Cmd, u32 Start) {
                 return "GEO_SCALE";
             }
             break;
+        }
+        case 0x10: {
+            std::string OutName;
+            u8 Layer = Rom.ReadBytes<u8>(Start + 1);
+            if (Layer & 0x30) {
+                OutName = "GEO_ROTATE_Y";
+            } else if (Layer & 0x20) {
+                OutName = "GEO_ROTATE";
+            } else if (Layer & 0x10) {
+                OutName = "GEO_TRANSLATE";
+            } else {
+                OutName = "GEO_TRANSLATE_ROTATE";
+            }
+
+            if (Layer & 0x80) {
+                OutName += "_WITH_DL";
+            }
+            return OutName;
         }
         default: return GeoCommandsName[Cmd];
     }

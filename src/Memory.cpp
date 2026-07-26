@@ -43,7 +43,7 @@ void InitMemoryMap() {
 
             if (End == Tokens[i] || *End != '\0') continue;
 
-            SymbolMap[(u32)Val] = Label;
+            SymbolMap.try_emplace((u32)Val, Label);
         }
     }
     fclose(MapFile);
