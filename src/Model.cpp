@@ -152,29 +152,17 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
                 u32 ImgType = C0(21, 3);
                 u32 BitDepth = GetBitDepthFromSize(C0(19, 2));
 
-                if (!Textures.empty() && ImgType != F3D_IMG_CI) {
-                    F3DTexture &Current = Textures.back();
-                    if (Current.Texture != 0 && Current.Texture != W1) {
-                        F3DTexture NewTex = Current; 
-                        NewTex.TextureSeg = W1;
-                        NewTex.Texture = W1;
-                        NewTex.ImgType = (F3DImageType)ImgType;
-                        NewTex.BitDepth = BitDepth;
-                        NewTex.Tile = 0xFF;
-                        
-                        Textures.push_back(NewTex);
-                        break; 
-                    }
-                }
-
                 F3DTexture &Tex = EnsureActiveTexture(Textures);
                 Tex.TextureSeg = W1;
                 Tex.Texture = W1;
-                Tex.ImgType = (F3DImageType)ImgType;
-                Tex.BitDepth = BitDepth;
+                
+                if (Tex.Tile == 0xFF) {
+                    Tex.ImgType = (F3DImageType)ImgType;
+                    Tex.BitDepth = BitDepth;
+                }
                 break;
             }
-            
+
             case G_SETTILE: {
                 F3DTexture &Tex = EnsureActiveTexture(Textures);
                 
@@ -183,8 +171,10 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
                 u32 Siz = C0(19, 2);
 
                 Tex.Tile = Tile;
-                Tex.ImgType = (F3DImageType)FMT;
-                Tex.BitDepth = GetBitDepthFromSize(Siz);
+                if (Tile != 7) {
+                    Tex.ImgType = (F3DImageType)FMT;
+                    Tex.BitDepth = GetBitDepthFromSize(Siz);
+                }
                 break;
             }
             
@@ -200,17 +190,20 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
             
             case G_SETTILESIZE: {
                 F3DTexture &Tex = EnsureActiveTexture(Textures);
+                u32 Tile = C1(24, 3);
 
-                u16 Uls = C0(12, 12);
-                u16 Ult = C0(0, 12);
-                u16 Lrs = C1(12, 12);
-                u16 Lrt = C1(0, 12);
+                if (Tile != 7) {
+                    u16 Uls = C0(12, 12);
+                    u16 Ult = C0(0, 12);
+                    u16 Lrs = C1(12, 12);
+                    u16 Lrt = C1(0, 12);
+                    u16 W = (u16)(((Lrs - Uls) >> 2) + 1);
+                    u16 H = (u16)(((Lrt - Ult) >> 2) + 1);
 
-                u16 W = (u16)(((Lrs >> 2) - (Uls >> 2)) + 1);
-                u16 H = (u16)(((Lrt >> 2) - (Ult >> 2)) + 1);
-                if (W > 0 && W <= 1024 &&  H > 0 && H <= 1024) {
-                    Tex.Width = W;
-                    Tex.Height = H;
+                    if (W > 0 && W <= 1024 && H > 0 && H <= 1024) {
+                        Tex.Width = W;
+                        Tex.Height = H;
+                    }
                 }
                 break;
             }
@@ -311,6 +304,19 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList,
                     if (Branch) return;
                     break;
                 }
+                case (u8)G_TRI1: {
+                    if (!Textures.empty()) {
+                        F3DTexture &Cur = Textures.back();
+                        if (Cur.Texture != 0) {
+                            F3DTexture Cpy = Cur;
+                            Cpy.Texture = 0;
+                            Cpy.TextureSeg = 0;
+                            Cpy.Length = 0;
+                            Textures.push_back(Cpy);
+                        }
+                    }
+                    break;
+                }
             }
         } else if (Rom.mMicrocode == UCODE_F3DEX2) {
             if (Cmd == (u8)0xdf) break;
@@ -324,6 +330,20 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList,
                         printf("DisplayList 0x%08x has an invalid address, ignoring export\n", W1);
                     }
                     if (Branch) return;
+                    break;
+                }
+                case (u8)0x05:
+                case (u8)0x06: {
+                    if (!Textures.empty()) {
+                        F3DTexture &Cur = Textures.back();
+                        if (Cur.Texture != 0) {
+                            F3DTexture Cpy = Cur;
+                            Cpy.Texture = 0;
+                            Cpy.TextureSeg = 0;
+                            Cpy.Length = 0;
+                            Textures.push_back(Cpy);
+                        }
+                    }
                     break;
                 }
             }
@@ -340,6 +360,20 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList,
                         printf("DisplayList 0x%08x has an invalid address, ignoring export\n", W1);
                     }
                     if (Branch) return;
+                    break;
+                }
+                case (u8)(G_IMMFIRST-14):
+                case (u8)G_TRI1: {
+                    if (!Textures.empty()) {
+                        F3DTexture &Cur = Textures.back();
+                        if (Cur.Texture != 0) {
+                            F3DTexture Cpy = Cur;
+                            Cpy.Texture = 0;
+                            Cpy.TextureSeg = 0;
+                            Cpy.Length = 0;
+                            Textures.push_back(Cpy);
+                        }
+                    }
                     break;
                 }
             }
@@ -497,8 +531,8 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, std::string LvlName, u8 Area
         ExportedTextures.insert(T.TextureSeg);
 
         fprintf(ModelDump, "u8 %s_texture_0x%x[] = {\n", GetPlaceHolderName().c_str(), T.TextureSeg);
-        u16 Width = T.Width ? T.Width : 32;
-        u16 Height = T.Height ? T.Height : 32;
+        u16 Width = T.Width;
+        u16 Height = T.Height;
         u32 pixels = Width * Height;
 
         if (T.Length == 0) {
