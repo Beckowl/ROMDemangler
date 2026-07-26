@@ -136,6 +136,8 @@ F3DTexture &EnsureActiveTexture(std::vector<F3DTexture> &Textures) {
 }
 
 void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd, bool Write, bool IsActor = false, Actor *Act = nullptr, FILE *ModelDump = nullptr, std::string LvlName="", u8 Area=0) {
+    static u32 CurrentLoadBitDepth = 16;
+    
     if (!Write) {
         auto GetBitDepthFromSize = [](u32 size) {
             switch (size) {
@@ -151,6 +153,8 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
             case G_SETTIMG: {
                 u32 ImgType = C0(21, 3);
                 u32 BitDepth = GetBitDepthFromSize(C0(19, 2));
+
+                CurrentLoadBitDepth = BitDepth;
 
                 F3DTexture &Tex = EnsureActiveTexture(Textures);
                 Tex.TextureSeg = W1;
@@ -181,7 +185,7 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
             case G_LOADBLOCK: {
                 F3DTexture &Tex = EnsureActiveTexture(Textures);
                 u32 Texels = C1(12, 12);
-                u32 Bytes = ((Texels + 1) * (u32)Tex.BitDepth) / 8;
+                u32 Bytes = ((Texels + 1) * CurrentLoadBitDepth) / 8;
                 if (Bytes > Tex.Length) {
                     Tex.Length = Bytes;
                 }
