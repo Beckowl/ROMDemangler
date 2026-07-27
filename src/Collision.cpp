@@ -1,6 +1,6 @@
 #include "Collision.h"
 
-void ExportCollision(N64Rom &Rom, u8 Area, std::string LvlName, u32 SegAddr, u32 &Entry, LevelScript &Script, const char *FilePath) {
+void ExportCollision(N64Rom &Rom, u8 Area, const std::string &LvlName, u32 SegAddr, u32 &Entry, LevelScript &Script, const char *FilePath) {
     Entry = (SegAddr);
     FILE *ColDump = fopen(FilePath, "w");
     fprintf(ColDump, "const Collision %s_area_%u_collision[] = {\n", LvlName.c_str(), Area);
@@ -29,8 +29,8 @@ void ExportCollision(N64Rom &Rom, u8 Area, std::string LvlName, u32 SegAddr, u32
         s16 NumTris = Rom.ReadBytes<s16>(Entry + XOffset + 2);
         if (SurfType == 0x41 || Guard > 20000) {
             fprintf(ColDump, "    COL_TRI_STOP(),\n");
-            if (Guard > 20000) {
-                printf("Maximum Collision triangle amount exceeded, stopping collision export\n");
+            if (Guard > 50000) {
+                printf("Level has broken collision data, stopping collision export");
             }
             break;
         }
@@ -64,8 +64,8 @@ void ExportCollision(N64Rom &Rom, u8 Area, std::string LvlName, u32 SegAddr, u32
         s16 SpecialType = Rom.ReadBytes<s16>(Entry + XOffset + 0);
         s16 Stuff = Rom.ReadBytes<s16>(Entry + XOffset + 2);
         if (SpecialType == 0x42 || Guard > 20000) {
-            if (Guard > 20000) {
-                printf("Maximum Special collision triangle amount exceeded, stopping collision export");
+            if (Guard > 50000) {
+                printf("Level has broken collision data, stopping collision export");
             }
             fprintf(ColDump, "    COL_END(),\n");
             break;

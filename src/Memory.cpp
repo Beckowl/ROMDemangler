@@ -12,7 +12,10 @@ void InitMemoryMap() {
     SymbolMap.clear();
 
     FILE *MapFile = fopen("sm64.us.map", "r");
-    if (!MapFile) return;
+    if (!MapFile) {
+        printf("Failed to find SM64 Memory Map, output will not have labels\n");
+        return;
+    }
 
     rewind(MapFile);
 

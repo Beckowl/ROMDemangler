@@ -810,7 +810,7 @@ bool IsJumpLvlCmd(u8 Cmd) {
     return Cmd == 0x00 || Cmd == 0x01 || Cmd == 0x02 || Cmd == 0x05 || Cmd == 0x06 || Cmd == 0x07 || Cmd == 0x0C || Cmd == 0x10 || Cmd == 0x09;
 }
 
-void ExportAreas(N64Rom &Rom, LevelScript &Script, std::string LvlName) {
+void ExportAreas(N64Rom &Rom, LevelScript &Script, const std::string &LvlName) {
     std::string AreasPath = "output/levels/"+LvlName+"/areas";
     fs::create_directories(AreasPath);
     for (auto &I : Script.Areas) {
@@ -829,7 +829,7 @@ void ExportAreas(N64Rom &Rom, LevelScript &Script, std::string LvlName) {
         ExportCollision(Rom, I, LvlName, ColSegAddr, ColSegAddr, Script, ColDumpPath.c_str());
         if (GameType == GT_ROM_MANAGER || GameType == GT_EDITOR) {
             std::string MovTextDumpPath = AreaStrNum + "/movtext.inc.c";
-            ExportMovText(Rom, I, LvlName, Script, MovTextDumpPath.c_str());
+            ExportMovTex(Rom, I, LvlName, Script, MovTextDumpPath.c_str());
         }
         std::string ModelDumpPath = AreaStrNum + "/model.inc.c";
         ExportModels(Rom, Script, LvlName, I, ModelDumpPath.c_str());

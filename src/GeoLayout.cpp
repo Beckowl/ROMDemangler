@@ -1052,7 +1052,7 @@ void WriteGeoLayoutRecursive(FILE *GeoDump, N64Rom &Rom, u8 Area, std::string Lv
     fprintf(GeoDump, "};\n\n");
 }
 
-void ExportGeolayout(N64Rom &Rom, u8 Area, std::string LvlName, u32 SegAddr, u32 Entry, LevelScript &Script, const char *FilePath) {
+void ExportGeolayout(N64Rom &Rom, u8 Area, const std::string &LvlName, u32 SegAddr, u32 Entry, LevelScript &Script, const char *FilePath) {
     FILE *GeoDump = fopen(FilePath, "w");
 
     ProcessedGeos.clear();

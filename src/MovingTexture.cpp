@@ -4,7 +4,7 @@
 std::vector<MovingTextureQC> MovingTextures = {};
 
 // this is the most depressing function i have ever wrote
-void ExportMovText(N64Rom &Rom, u8 Area, std::string LvlName, LevelScript &Script, const char *FilePath) {
+void ExportMovTex(N64Rom &Rom, u8 Area, const std::string &LvlName, LevelScript &Script, const char *FilePath) {
     FILE *MovTextDump = fopen(FilePath, "w");
     u8 WaterCount = Script.AreaDatas[Area].WaterBoxCount;
     if (WaterCount == 0) {

@@ -117,7 +117,7 @@ const char *F3D_AC(enum F3DCCPart Part, u16 Element) {
     return "0";
 }
 
-F3DTexture &EnsureActiveTexture(std::vector<F3DTexture> &Textures) {
+F3DTexture &GetCurrTex(std::vector<F3DTexture> &Textures) {
     if (Textures.empty()) {
         F3DTexture Tex = {};
         Tex.TextureSeg = 0;
@@ -156,10 +156,11 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
 
                 CurrentLoadBitDepth = BitDepth;
 
-                F3DTexture &Tex = EnsureActiveTexture(Textures);
+                F3DTexture &Tex = GetCurrTex(Textures);
                 Tex.TextureSeg = W1;
                 Tex.Texture = W1;
                 
+                // new texture
                 if (Tex.Tile == 0xFF) {
                     Tex.ImgType = (F3DImageType)ImgType;
                     Tex.BitDepth = BitDepth;
@@ -168,7 +169,7 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
             }
 
             case G_SETTILE: {
-                F3DTexture &Tex = EnsureActiveTexture(Textures);
+                F3DTexture &Tex = GetCurrTex(Textures);
                 
                 u32 Tile = C1(24, 3);
                 u32 FMT = C0(21, 3);
@@ -183,7 +184,7 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
             }
             
             case G_LOADBLOCK: {
-                F3DTexture &Tex = EnsureActiveTexture(Textures);
+                F3DTexture &Tex = GetCurrTex(Textures);
                 u32 Texels = C1(12, 12);
                 u32 Bytes = ((Texels + 1) * CurrentLoadBitDepth) / 8;
                 if (Bytes > Tex.Length) {
@@ -193,7 +194,7 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
             }
             
             case G_SETTILESIZE: {
-                F3DTexture &Tex = EnsureActiveTexture(Textures);
+                F3DTexture &Tex = GetCurrTex(Textures);
                 u32 Tile = C1(24, 3);
 
                 if (Tile != G_TX_LOADTILE) {
@@ -213,7 +214,7 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
             }
             
             case G_LOADTLUT: {
-                F3DTexture &Tex = EnsureActiveTexture(Textures);
+                F3DTexture &Tex = GetCurrTex(Textures);
                 Tex.Palette = Tex.Texture;
                 Tex.PaletteSeg = Tex.TextureSeg;
                 break;
@@ -440,7 +441,7 @@ std::string ConvertGeoMode(N64Rom &Rom, uint32_t Flags) {
     return Result;
 }
 
-void ExportModels(N64Rom &Rom, LevelScript &Script, std::string LvlName, u8 Area, const char *FilePath, bool IsActor, Actor *Act) {
+void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, u8 Area, const char *FilePath, bool IsActor, Actor *Act) {
     FILE *ModelDump = fopen(FilePath, "w");
 
     auto GetPlaceHolderName = [LvlName, Area, IsActor, Act](void) {

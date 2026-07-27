@@ -2,4 +2,4 @@
 
 #include "LevelScript.h"
 
-extern void ExportCollision(N64Rom &Rom, u8 Area, std::string LvlName, u32 SegAddr, u32 &Entry, LevelScript &Script, const char *FilePath);
+extern void ExportCollision(N64Rom &Rom, u8 Area, const std::string &LvlName, u32 SegAddr, u32 &Entry, LevelScript &Script, const char *FilePath);

@@ -9,4 +9,4 @@ enum F3DCCPart {
     CC_PART_D
 };
 
-void ExportModels(N64Rom &Rom, LevelScript &Script, std::string LvlName, u8 Area, const char *FilePath, bool IsActor = false, Actor *Act = nullptr);
+void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, u8 Area, const char *FilePath, bool IsActor = false, Actor *Act = nullptr);

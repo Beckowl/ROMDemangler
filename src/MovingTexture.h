@@ -12,4 +12,4 @@ struct MovingTextureQC {
 
 extern std::vector<MovingTextureQC> MovingTextures;
 
-extern void ExportMovText(N64Rom &Rom, u8 Area, std::string LvlName, LevelScript &Script, const char *FilePath);
+extern void ExportMovTex(N64Rom &Rom, u8 Area, const std::string &LvlName, LevelScript &Script, const char *FilePath);
