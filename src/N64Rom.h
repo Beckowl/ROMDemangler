@@ -33,12 +33,12 @@ extern u32 SegmentOffsets[MAX_SEGMENT][2];
 
 class N64Rom {
 public:
-    FILE *mFile;
-    s32 mSize = 0;
-    u8 *mData = nullptr;
+    FILE *File;
+    s32 Size = 0;
+    u8 *Data = nullptr;
     u8 *RAM = nullptr;
-    std::string mRomInternalName;
-    enum N64Microcode mMicrocode = UCODE_UNKNOWN;
+    std::string ROMInternalName;
+    enum N64Microcode Microcode = UCODE_UNKNOWN;
 
     void OpenFile(const char *Path, const char *RAMPath);
 
@@ -46,8 +46,8 @@ public:
     T ReadBytesPhysical(s32 Offset) const {
         T Buf{};
         constexpr size_t RealSize = sizeof(T);
-        if (Offset + RealSize > mSize) return Buf;
-        memcpy(&Buf, mData + Offset, RealSize);
+        if (Offset + RealSize > Size) return Buf;
+        memcpy(&Buf, Data + Offset, RealSize);
         if constexpr (std::is_integral_v<T> && RealSize > 1) {
             Buf = SwapEndian(Buf);
         }
@@ -91,8 +91,8 @@ public:
     template <typename T>
     T *ReadBytesPtr(u32 Offset, T *Buf, u32 Len) {
         size_t RealSize = sizeof(T) * Len;
-        if (Offset + RealSize > mSize) return Buf;
-        memcpy(Buf, mData + Offset, RealSize);
+        if (Offset + RealSize > Size) return Buf;
+        memcpy(Buf, Data + Offset, RealSize);
 
         if constexpr (std::is_integral_v<T> && sizeof(T) > 1) {
             for (u32 i = 0; i < Len; i++) {

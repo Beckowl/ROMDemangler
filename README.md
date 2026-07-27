@@ -1,5 +1,5 @@
 # ROM Demangler
-A tool in made in C++ that allows you to export data from SM64 ROMs to a sm64coopdx romhack.
+A W.I.P tool in made in C++ that allows you to export data from SM64 ROMs to a sm64coopdx romhack.
 
 Credits:
 - [stb_image_write](https://github.com/nothings/stb/blob/master/stb_image_write.h) by [nothings](https://github.com/nothings) - Used for exporting textures

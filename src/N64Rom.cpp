@@ -31,41 +31,41 @@ void *memmem(const void *haystack, size_t haystacklen, const void *needle, size_
 #endif
 
 void N64Rom::OpenFile(const char *Path, const char *RAMPath) {
-    mFile = fopen(Path, "rb");
-    if (!mFile) {
+    File = fopen(Path, "rb");
+    if (!File) {
         printf("Can't open \"%s\"\n", Path);
         exit(1);
     }
-    fseek(mFile, 0, SEEK_END);
-    mSize = ftell(mFile);
-    fseek(mFile, 0, SEEK_SET);
-    mData = (u8 *) malloc(mSize);
-    fread(mData, 1, mSize, mFile);
-    mRomInternalName.resize(0x15);
-    ReadBytesPtr<char>(0x20, &mRomInternalName[0], 0x15);
+    fseek(File, 0, SEEK_END);
+    Size = ftell(File);
+    fseek(File, 0, SEEK_SET);
+    Data = new u8[Size];
+    fread(Data, 1, Size, File);
+    ROMInternalName.resize(0x15);
+    ReadBytesPtr<char>(0x20, &ROMInternalName[0], 0x15);
 
     if (RAMPath) {
-        FILE *RamFILE = fopen(RAMPath, "rb");
-        if (!RamFILE) {
+        FILE *RAMFile = fopen(RAMPath, "rb");
+        if (!RAMFile) {
             printf("Can't open \"%s\"\n", RAMPath);
             exit(1);
         }
-        fseek(RamFILE, 0, SEEK_END);
-        size_t RAMSize = ftell(RamFILE);
-        fseek(RamFILE, 0, SEEK_SET);
-        RAM = (u8 *) malloc(RAMSize);
-        fread(RAM, 1, RAMSize, RamFILE);
-        fclose(RamFILE);
+        fseek(RAMFile, 0, SEEK_END);
+        size_t RAMSize = ftell(RAMFile);
+        fseek(RAMFile, 0, SEEK_SET);
+        RAM = new u8[RAMSize];
+        fread(RAM, 1, RAMSize, RAMFile);
+        fclose(RAMFile);
     }
 
-    mMicrocode = UCODE_UNKNOWN;
+    Microcode = UCODE_UNKNOWN;
     std::string FoundUCode = "";
     std::string ExtraConfig = "";
 
-    char *SigPtr = (char*)memmem(mData, mSize, "RSP Gfx ucode ", 14);
+    char *SigPtr = (char*)memmem(Data, Size, "RSP Gfx ucode ", 14);
     if (!SigPtr) {
         // old f3d
-        SigPtr = (char*)memmem(mData, mSize, "RSP SW Version: ", 16);
+        SigPtr = (char*)memmem(Data, Size, "RSP SW Version: ", 16);
     }
 
     if (SigPtr) {
@@ -76,15 +76,15 @@ void N64Rom::OpenFile(const char *Path, const char *RAMPath) {
         FoundUCode = std::string(SigPtr, SigLen);
 
         if (FoundUCode.find("F3DZEX") != std::string::npos) {
-            mMicrocode = UCODE_F3DZEX;
+            Microcode = UCODE_F3DZEX;
         } else if (FoundUCode.find("F3DEX") != std::string::npos) {
             if (FoundUCode.find("2.") != std::string::npos) {
-                mMicrocode = UCODE_F3DEX2;
+                Microcode = UCODE_F3DEX2;
             } else {
-                mMicrocode = UCODE_F3DEX;
+                Microcode = UCODE_F3DEX;
             }
         } else if (FoundUCode.find("RSP SW Version: 2.0") != std::string::npos) {
-            mMicrocode = UCODE_F3D;
+            Microcode = UCODE_F3D;
         }
 
         if (FoundUCode.find("fifo") != std::string::npos) ExtraConfig += " [FIFO]";
@@ -92,27 +92,27 @@ void N64Rom::OpenFile(const char *Path, const char *RAMPath) {
         if (FoundUCode.find("NoN") != std::string::npos) ExtraConfig += " [NoN]";
     }
 
-    if (mMicrocode == UCODE_UNKNOWN) {
+    if (Microcode == UCODE_UNKNOWN) {
         printf("Unsupported Microcode detected!\n");
         exit(1);
     }
 
     printf("Microcode Details:\n");
     printf("  Signature: %s\n", FoundUCode.c_str());
-    printf("  Name: %s\n", UCodeSigToName[mMicrocode].c_str());
+    printf("  Name: %s\n", UCodeSigToName[Microcode].c_str());
     if (!ExtraConfig.empty()) {
         printf("  Features:%s\n", ExtraConfig.c_str());
     }
 
     // its just ex2 with positional lighting that
     // no one ever used lmfao
-    if (mMicrocode == UCODE_F3DZEX) {
-        mMicrocode = UCODE_F3DEX2; 
+    if (Microcode == UCODE_F3DZEX) {
+        Microcode = UCODE_F3DEX2; 
     }
 }
 
 void N64Rom::CloseFile(void) {
-    free(mData);
-    if (RAM) free(RAM);
-    fclose(mFile);
+    delete[] Data;
+    if (RAM) delete[] RAM;
+    fclose(File);
 }

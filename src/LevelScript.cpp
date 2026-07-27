@@ -479,7 +479,7 @@ std::string LvlCmdStartArea(N64Rom &Rom, LevelScript &Script, u32 &Start) {
     );
 
     if (Index > MAX_AREA) {
-        printf("Area Index for command is bigger than MAX_AREA");
+        printf("Area Index for command is bigger than MAX_AREA\n");
         Index &= (MAX_AREA-1);
     }
 
@@ -819,9 +819,7 @@ void ExportAreas(N64Rom &Rom, LevelScript &Script, const std::string &LvlName) {
 
         Script.SetAreaSegmented0x0E(Rom, I);
 
-        char AreaIDStr[20];
-        snprintf(AreaIDStr, 20, "%u", I);
-        std::string AreaStrNum = AreasPath+"/"+AreaIDStr;
+        std::string AreaStrNum = AreasPath+"/"+std::to_string(I);
         fs::create_directories(AreaStrNum);
         std::string GeoDumpPath = AreaStrNum + "/geo.inc.c";
         ExportGeolayout(Rom, I, LvlName, GeoSegAddr, GeoSegAddr, Script, GeoDumpPath.c_str());
@@ -861,8 +859,8 @@ void ExportLevel(N64Rom &Rom, u8 LvlID) {
     if (!FoundScriptEntry) {
         const u8 Pattern[] = {0x1b, 0x04, 0x00, 0x00, 0x03, 0x04, 0x00, 0x02, 0x34, 0x04, 0x00, 0x00};
         size_t PatternLen = sizeof(Pattern);
-        u8* Start = Rom.mData;
-        u8* End = Rom.mData + Rom.mSize;
+        u8* Start = Rom.Data;
+        u8* End = Rom.Data + Rom.Size;
         u8* Found = std::search(Start, End, Pattern, Pattern + PatternLen);
         if (Found != End) {
             Entry = (u32)(Found - Start);

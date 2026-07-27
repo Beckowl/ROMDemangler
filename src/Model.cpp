@@ -225,16 +225,21 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
             return IsActor ? Act->Name : std::format("{}_{}", LvlName, Area);
         };
         switch (Cmd) {
-            case G_SETTIMG: fprintf(ModelDump,"    gsDPSetTextureImage(%u, %u, %u, %s_texture_0x%x),\n",
-                            C0(21,3),C0(19,2),1,GetPlaceHolderName().c_str(),W1); break;
-            case G_SETTILE: fprintf(ModelDump,"    gsDPSetTile(%u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u),\n",
-                            C0(21,3),C0(19,2),C0(9,9),C0(0,9),C1(24,3),C1(20,4),C1(18,2),C1(14,4),
-                            C1(10,4),C1(8,2),C1(4,4),C1(0,4)); break;
-            case G_SETTILESIZE: fprintf(ModelDump,"    gsDPSetTileSize(%u, %u, %u, %u, %u),\n",
-                            C1(24,3),C0(12,12),C0(0,12),C1(12,12),C1(0,12)); break;
-            case G_LOADBLOCK: fprintf(ModelDump,"    gsDPLoadBlock(%u, %u, %u, %u, %u),\n",
-                            C1(24,3),C0(12,12),C0(0,12),C1(12,12),C1(0,12)); break;
-            case G_LOADTLUT: fprintf(ModelDump,"    //gsDPLoadTLUTCmd(%u, %u),\n",C1(24,3),C1(14,10)); break;
+            case G_SETTIMG:
+                fprintf(ModelDump,"    gsDPSetTextureImage(%u, %u, %u, %s_texture_0x%x),\n", C0(21,3),C0(19,2),1,GetPlaceHolderName().c_str(),W1);
+                break;
+            case G_SETTILE:
+                fprintf(ModelDump,"    gsDPSetTile(%u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u),\n", C0(21,3),C0(19,2),C0(9,9),C0(0,9),C1(24,3),C1(20,4),C1(18,2),C1(14,4), C1(10,4),C1(8,2),C1(4,4),C1(0,4));
+                break;
+            case G_SETTILESIZE:
+                fprintf(ModelDump,"    gsDPSetTileSize(%u, %u, %u, %u, %u),\n", C1(24,3),C0(12,12),C0(0,12),C1(12,12),C1(0,12));
+                break;
+            case G_LOADBLOCK:
+                fprintf(ModelDump,"    gsDPLoadBlock(%u, %u, %u, %u, %u),\n", C1(24,3),C0(12,12),C0(0,12),C1(12,12),C1(0,12));
+                break;
+            case G_LOADTLUT:
+                fprintf(ModelDump,"    //gsDPLoadTLUTCmd(%u, %u),\n",C1(24,3),C1(14,10));
+                break;
             case G_SETCOMBINE: {
                 const char *A0First = F3D_CC(CC_PART_A, C0(20, 4));
                 const char *B0First = F3D_CC(CC_PART_B, C1(28, 4));
@@ -255,20 +260,14 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
                 const char *AlphaD0Second = F3D_AC(CC_PART_D, C1(0, 3));
 
                 fprintf(ModelDump,"    gsDPSetCombineLERP(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s),\n",
-                A0First, B0First, C0First, D0First, AlphaA0First, AlphaB0First, AlphaC0First, AlphaD0First,
-                A0Second, B0Second, C0Second, D0Second, AlphaA0Second, AlphaB0Second, AlphaC0Second, AlphaD0Second);
+                    A0First, B0First, C0First, D0First, AlphaA0First, AlphaB0First, AlphaC0First, AlphaD0First,
+                    A0Second, B0Second, C0Second, D0Second, AlphaA0Second, AlphaB0Second, AlphaC0Second, AlphaD0Second);
             }
         }
     }
 }
 
-void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList,
-                               std::vector<F3DVertex> &Vertices,
-                               std::vector<F3DLight> &Ambients,
-                               std::vector<F3DLight> &Lights,
-                               std::vector<F3DTexture> &Textures,
-                               std::vector<F3DDL> &DLs,
-                               std::vector<u32> &CallStack) {
+void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList, std::vector<F3DVertex> &Vertices, std::vector<F3DLight> &Ambients, std::vector<F3DLight> &Lights, std::vector<F3DTexture> &Textures, std::vector<F3DDL> &DLs, std::vector<u32> &CallStack) {
     u32 Entry = (DisplayList);
 
     if (std::find(CallStack.begin(), CallStack.end(), DisplayList) != CallStack.end()) {
@@ -294,7 +293,7 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList,
         
         ParseRDPCommands(Textures, W0, W1, Cmd, false, false, nullptr);
         
-        if (Rom.mMicrocode == UCODE_F3D) {
+        if (Rom.Microcode == UCODE_F3D) {
             if (Cmd == (u8)G_ENDDL) break;
             switch (Cmd) {
                 case G_VTX: Vertices.push_back({ (W1), W1, (C0(0, 16)) / 16 }); break;
@@ -304,7 +303,7 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList,
                     if (ValidateMemAddr(W1)) {
                         ParseDisplayListRecursive(Rom, W1, Vertices, Ambients, Lights, Textures, DLs, CallStack);
                     } else {
-                        printf("DisplayList 0x%08x has an invalid address, ignoring export\n", W1);
+                        if (VerbosePrinting) printf("DisplayList 0x%08x has an invalid address, ignoring export\n", W1);
                     }
                     if (Branch) return;
                     break;
@@ -323,7 +322,7 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList,
                     break;
                 }
             }
-        } else if (Rom.mMicrocode == UCODE_F3DEX2) {
+        } else if (Rom.Microcode == UCODE_F3DEX2) {
             if (Cmd == (u8)0xdf) break;
             switch (Cmd) {
                 case 0x01: Vertices.push_back({ (W1), W1, (C0(12, 8))}); break;
@@ -332,7 +331,7 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList,
                     if (ValidateMemAddr(W1)) {
                         ParseDisplayListRecursive(Rom, W1, Vertices, Ambients, Lights, Textures, DLs, CallStack);
                     } else {
-                        printf("DisplayList 0x%08x has an invalid address, ignoring export\n", W1);
+                       if (VerbosePrinting) printf("DisplayList 0x%08x has an invalid address, ignoring export\n", W1);
                     }
                     if (Branch) return;
                     break;
@@ -352,7 +351,7 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList,
                     break;
                 }
             }
-        } else if (Rom.mMicrocode == UCODE_F3DEX) {
+        } else if (Rom.Microcode == UCODE_F3DEX) {
             if (Cmd == (u8)G_ENDDL) break;
             switch (Cmd) {
                 case G_VTX: Vertices.push_back({ (W1), W1, (C0(10, 6)) }); break;
@@ -362,7 +361,7 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList,
                     if (ValidateMemAddr(W1)) {
                         ParseDisplayListRecursive(Rom, W1, Vertices, Ambients, Lights, Textures, DLs, CallStack);
                     } else {
-                        printf("DisplayList 0x%08x has an invalid address, ignoring export\n", W1);
+                        if (VerbosePrinting) printf("DisplayList 0x%08x has an invalid address, ignoring export\n", W1);
                     }
                     if (Branch) return;
                     break;
@@ -418,7 +417,7 @@ std::string ConvertGeoMode(N64Rom &Rom, uint32_t Flags) {
     
     std::vector<std::pair<uint32_t, std::string>> macros = GeoMacrosF3D;
 
-    if (Rom.mMicrocode == UCODE_F3DEX2) {
+    if (Rom.Microcode == UCODE_F3DEX2) {
         macros = GeoMacrosF3DEX2;
     }
 
@@ -479,12 +478,15 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, 
     std::set<u32> ExportedLights;
     std::set<u32> ExportedTextures;
 
+    const std::string PlaceHolderNameStr = GetPlaceHolderName();
+    const char *PlaceHolderName = PlaceHolderNameStr.c_str();
+
     for (const auto &V : Vertices) {
         if (!ValidateMemAddr(V.Vtx)) continue;
         if (ExportedVertices.count(V.VtxSeg)) continue;
         ExportedVertices.insert(V.VtxSeg);
 
-        fprintf(ModelDump, "Vtx %s_vertex_0x%x[] = {\n", GetPlaceHolderName().c_str(), V.VtxSeg);
+        fprintf(ModelDump, "Vtx %s_vertex_0x%x[] = {\n", PlaceHolderName, V.VtxSeg);
         for (u32 I = 0; I < V.Size; I++) {
             u32 Addr = V.Vtx + I * 16;
             s16 X = Rom.ReadBytes<s16>(Addr + 0);
@@ -508,7 +510,7 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, 
         if (ExportedAmbients.count(A.LightSeg)) continue;
         ExportedAmbients.insert(A.LightSeg);
 
-        fprintf(ModelDump, "Ambient_t %s_light_0x%x[] = {\n", GetPlaceHolderName().c_str(), A.LightSeg);
+        fprintf(ModelDump, "Ambient_t %s_light_0x%x[] = {\n", PlaceHolderName, A.LightSeg);
         u32 Addr = A.Light;
         fprintf(ModelDump, "    { %u, %u, %u}, 0, { %u, %u, %u}, 0\n",
                 Rom.ReadBytes<u8>(Addr + 0), Rom.ReadBytes<u8>(Addr + 1), Rom.ReadBytes<u8>(Addr + 2),
@@ -521,7 +523,7 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, 
         if (ExportedLights.count(L.LightSeg)) continue;
         ExportedLights.insert(L.LightSeg);
 
-        fprintf(ModelDump, "Light_t %s_light_0x%x[] = {\n", GetPlaceHolderName().c_str(), L.LightSeg);
+        fprintf(ModelDump, "Light_t %s_light_0x%x[] = {\n", PlaceHolderName, L.LightSeg);
         u32 Addr = L.Light;
         fprintf(ModelDump, "    { %u, %u, %u}, 0, { %u, %u, %u}, 0, { %d, %d, %d}, 0\n",
                 Rom.ReadBytes<u8>(Addr + 0), Rom.ReadBytes<u8>(Addr + 1), Rom.ReadBytes<u8>(Addr + 2),
@@ -535,39 +537,39 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, 
         if (ExportedTextures.count(T.TextureSeg)) continue;
         ExportedTextures.insert(T.TextureSeg);
 
-        fprintf(ModelDump, "u8 %s_texture_0x%x[] = {\n", GetPlaceHolderName().c_str(), T.TextureSeg);
+        fprintf(ModelDump, "u8 %s_texture_0x%x[] = {\n", PlaceHolderName, T.TextureSeg);
         u16 Width = T.Width;
         u16 Height = T.Height;
-        u32 pixels = Width * Height;
+        u32 PixelCount = Width * Height;
 
         if (T.Length == 0) {
-            T.Length = ((pixels + 1) * (u32)T.BitDepth) / 8;
+            T.Length = ((PixelCount + 1) * (u32)T.BitDepth) / 8;
         }
 
-        std::vector<u8> src(T.Length*2);
+        std::vector<u8> SrcData(T.Length*2);
         for (u32 j = 0; j < T.Length; j++)
-            src[j] = Rom.ReadBytes<u8>(T.Texture + j);
+            SrcData[j] = Rom.ReadBytes<u8>(T.Texture + j);
 
-        std::vector<u8> rgba(pixels * 4);
+        std::vector<u8> RGBA(PixelCount * 4);
 
         switch (T.ImgType) {
             case F3D_IMG_RGBA:
             case F3D_IMG_YUV:
-                if (T.BitDepth == 16) BinImg::DecodeRGBA16(src.data(), rgba.data(), pixels);
-                else if (T.BitDepth == 32) BinImg::DecodeRGBA32(src.data(), rgba.data(), pixels);
+                if (T.BitDepth == 16) BinImg::DecodeRGBA16(SrcData.data(), RGBA.data(), PixelCount);
+                else if (T.BitDepth == 32) BinImg::DecodeRGBA32(SrcData.data(), RGBA.data(), PixelCount);
                 break;
             case F3D_IMG_CI:
-                if (T.BitDepth == 4) BinImg::DecodeCI4(src.data(), rgba.data(), pixels, Rom, T.Palette);
-                else if (T.BitDepth == 8) BinImg::DecodeCI8(src.data(), rgba.data(), pixels, Rom, T.Palette);
+                if (T.BitDepth == 4) BinImg::DecodeCI4(SrcData.data(), RGBA.data(), PixelCount, Rom, T.Palette);
+                else if (T.BitDepth == 8) BinImg::DecodeCI8(SrcData.data(), RGBA.data(), PixelCount, Rom, T.Palette);
                 break;
             case F3D_IMG_I:
-                if (T.BitDepth == 4) BinImg::DecodeI4(src.data(), rgba.data(), pixels);
-                else if (T.BitDepth == 8) BinImg::DecodeI8(src.data(), rgba.data(), pixels);
+                if (T.BitDepth == 4) BinImg::DecodeI4(SrcData.data(), RGBA.data(), PixelCount);
+                else if (T.BitDepth == 8) BinImg::DecodeI8(SrcData.data(), RGBA.data(), PixelCount);
                 break;
             case F3D_IMG_IA:
-                if (T.BitDepth == 4) BinImg::DecodeIA4(src.data(), rgba.data(), pixels);
-                else if (T.BitDepth == 8) BinImg::DecodeIA8(src.data(), rgba.data(), pixels);
-                else if (T.BitDepth == 16) BinImg::DecodeIA16(src.data(), rgba.data(), pixels);
+                if (T.BitDepth == 4) BinImg::DecodeIA4(SrcData.data(), RGBA.data(), PixelCount);
+                else if (T.BitDepth == 8) BinImg::DecodeIA8(SrcData.data(), RGBA.data(), PixelCount);
+                else if (T.BitDepth == 16) BinImg::DecodeIA16(SrcData.data(), RGBA.data(), PixelCount);
                 break;
             default:
                 T.ImgType = F3D_IMG_RGBA;
@@ -578,21 +580,21 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, 
         sprintf(ImgTypeName, "%s%u", TextureFormatNames[T.ImgType].c_str(), T.BitDepth);
         char FileName[256];
         if (IsActor) {
-            sprintf(FileName, "output/actors/%s/%s_texture_0x%x.%s.png", Act->Name.c_str(), GetPlaceHolderName().c_str(), T.TextureSeg, ImgTypeName);
+            sprintf(FileName, "output/actors/%s/%s_texture_0x%x.%s.png", Act->Name.c_str(), PlaceHolderName, T.TextureSeg, ImgTypeName);
         } else {
-            sprintf(FileName, "output/levels/%s/%s_texture_0x%x.%s.png", LvlName.c_str(), GetPlaceHolderName().c_str(), T.TextureSeg, ImgTypeName);
+            sprintf(FileName, "output/levels/%s/%s_texture_0x%x.%s.png", LvlName.c_str(), PlaceHolderName, T.TextureSeg, ImgTypeName);
         }
-        stbi_write_png(FileName, Width, Height, 4, rgba.data(), Width * 4);
+        stbi_write_png(FileName, Width, Height, 4, RGBA.data(), Width * 4);
         if (IsActor) {
-            fprintf(ModelDump, "    #include \"actors/%s/%s_texture_0x%x.%s.inc.c\"\n", Act->Name.c_str(), GetPlaceHolderName().c_str(), T.TextureSeg, ImgTypeName);
+            fprintf(ModelDump, "    #include \"actors/%s/%s_texture_0x%x.%s.inc.c\"\n", Act->Name.c_str(), PlaceHolderName, T.TextureSeg, ImgTypeName);
         } else {
-            fprintf(ModelDump, "    #include \"levels/%s/%s_texture_0x%x.%s.inc.c\"\n", LvlName.c_str(), GetPlaceHolderName().c_str(), T.TextureSeg, ImgTypeName);
+            fprintf(ModelDump, "    #include \"levels/%s/%s_texture_0x%x.%s.inc.c\"\n", LvlName.c_str(), PlaceHolderName, T.TextureSeg, ImgTypeName);
         }
 
         fprintf(ModelDump, "};\n");
 
         if (T.ImgType == F3D_IMG_CI) {
-            fprintf(ModelDump, "u8 %s_texture_0x%x[] = {\n", GetPlaceHolderName().c_str(), T.PaletteSeg);
+            fprintf(ModelDump, "u8 %s_texture_0x%x[] = {\n", PlaceHolderName, T.PaletteSeg);
             fprintf(ModelDump, "    0x00\n");
             fprintf(ModelDump, "};\n");
         }
@@ -600,7 +602,7 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, 
 
     for (const auto &DL : DLs) {
         u32 Entry = DL.Entry;
-        fprintf(ModelDump, "Gfx %s_displaylist_0x%x[] = {\n", GetPlaceHolderName().c_str(), DL.DisplayListSeg);
+        fprintf(ModelDump, "Gfx %s_displaylist_0x%x[] = {\n", PlaceHolderName, DL.DisplayListSeg);
 
         while (true) {
             u32 W0 = Rom.ReadBytes<u32>(Entry);
@@ -609,12 +611,13 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, 
             bool ShouldEnd = false;
             ParseRDPCommands(Textures, W0, W1, Cmd, true, IsActor, Act, ModelDump, LvlName, Area);
 
-            if (Rom.mMicrocode == UCODE_F3D) {
+            if (Rom.Microcode == UCODE_F3D) {
                 if (Cmd == (u8)G_ENDDL) { fprintf(ModelDump, "    gsSPEndDisplayList(),\n};\n\n"); break; }
 
                 switch(Cmd) {
-                    case G_VTX: fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n",
-                                    GetPlaceHolderName().c_str(), W1, (C0(0,16))/16, C0(16,4)); break;
+                    case G_VTX:
+                        fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, (C0(0,16))/16, C0(16,4));
+                        break;
                     case (u8)G_TRI1: {
                         u32 NextW0 = Rom.ReadBytes<u32>(Entry+8);
                         u32 NextW1 = Rom.ReadBytes<u32>(Entry+12);
@@ -630,27 +633,35 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, 
                         }
                         break;
                     }
-                    case (u8)G_CLEARGEOMETRYMODE: fprintf(ModelDump,"    gsSPClearGeometryMode(%s),\n",ConvertGeoMode(Rom, W1).c_str()); break;
-                    case (u8)G_SETGEOMETRYMODE: fprintf(ModelDump,"    gsSPSetGeometryMode(%s),\n",ConvertGeoMode(Rom, W1).c_str()); break;
-                    case G_MOVEMEM: fprintf(ModelDump,"    gsSPLight(&%s_light_0x%x.col, %u),\n",
-                                    GetPlaceHolderName().c_str(), W1, (C0(16,8)==0x88?2:1)); break;
+                    case (u8)G_CLEARGEOMETRYMODE:
+                        fprintf(ModelDump,"    gsSPClearGeometryMode(%s),\n",ConvertGeoMode(Rom, W1).c_str());
+                        break;
+                    case (u8)G_SETGEOMETRYMODE:
+                        fprintf(ModelDump,"    gsSPSetGeometryMode(%s),\n",ConvertGeoMode(Rom, W1).c_str());
+                        break;
+                    case G_MOVEMEM:
+                        fprintf(ModelDump,"    gsSPLight(&%s_light_0x%x.col, %u),\n", PlaceHolderName, W1, (C0(16,8)==0x88?2:1));
+                        break;
                     case G_DL: {
                         bool Branch = (C0(16, 1) == 0x01);
-                        fprintf(ModelDump,"    %s(%s_displaylist_0x%x),\n",
-                                Branch ? "gsSPBranchList" : "gsSPDisplayList", GetPlaceHolderName().c_str(), W1);
+                        fprintf(ModelDump,"    %s(%s_displaylist_0x%x),\n", Branch ? "gsSPBranchList" : "gsSPDisplayList", PlaceHolderName, W1);
                         if (Branch) {
                             fprintf(ModelDump, "};\n\n");
                             ShouldEnd = true;
                         }
                         break;
                     }
-                    case (u8)G_TEXTURE: fprintf(ModelDump,"    gsSPTexture(%u, %u, %u, %u, %u),\n",C1(16,16),C1(0,16),C0(11,3),C0(8,3),C0(0,8)); break;
+                    case (u8)G_TEXTURE:
+                        fprintf(ModelDump,"    gsSPTexture(%u, %u, %u, %u, %u),\n",C1(16,16),C1(0,16),C0(11,3),C0(8,3),C0(0,8));
+                        break;
                 }
-            } else if (Rom.mMicrocode == UCODE_F3DEX2) {
+            } else if (Rom.Microcode == UCODE_F3DEX2) {
                 if (Cmd == (u8)0xdf) { fprintf(ModelDump, "    gsSPEndDisplayList(),\n};\n\n"); break; }
 
                 switch(Cmd) {
-                    case 0x01: fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n", GetPlaceHolderName().c_str(), W1, C0(12, 8), (C0(1, 7) - C0(12, 8))); break;
+                    case 0x01:
+                        fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(12, 8), (C0(1, 7) - C0(12, 8)));
+                        break;
                     case (u8)0x05: {
                         fprintf(ModelDump, "    gsSP1Triangle(%u, %u, %u, 0),\n", C0(16, 8) / 2, C0(8, 8) / 2, C0(0, 8) / 2);
                         break;
@@ -661,23 +672,27 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, 
                     }
                     case 0xde: {
                         bool Branch = (C0(16, 1) == 0x01);
-                        fprintf(ModelDump,"    %s(%s_displaylist_0x%x),\n",
-                                Branch ? "gsSPBranchList" : "gsSPDisplayList", GetPlaceHolderName().c_str(), W1);
+                        fprintf(ModelDump,"    %s(%s_displaylist_0x%x),\n", Branch ? "gsSPBranchList" : "gsSPDisplayList", PlaceHolderName, W1);
                         if (Branch) {
                             fprintf(ModelDump, "};\n\n");
                             ShouldEnd = true;
                         }
                         break;
                     }
-                    case (u8)0xd7: fprintf(ModelDump,"    gsSPTexture(%u, %u, %u, %u, %u),\n",C1(16, 16), C1(0, 16), C0(11, 3), C0(8, 3), C0(1, 7)); break;
-                    case (u8)0xd9: fprintf(ModelDump,"    gsSPGeometryMode(%s, %s),\n",ConvertGeoMode(Rom, ~C0(0, 24)).c_str(),ConvertGeoMode(Rom, W1).c_str()); break;
+                    case (u8)0xd7:
+                        fprintf(ModelDump,"    gsSPTexture(%u, %u, %u, %u, %u),\n",C1(16, 16), C1(0, 16), C0(11, 3), C0(8, 3), C0(1, 7));
+                        break;
+                    case (u8)0xd9:
+                        fprintf(ModelDump,"    gsSPGeometryMode(%s, %s),\n",ConvertGeoMode(Rom, ~C0(0, 24)).c_str(),ConvertGeoMode(Rom, W1).c_str());
+                        break;
                 }
-            } else if (Rom.mMicrocode == UCODE_F3DEX) {
+            } else if (Rom.Microcode == UCODE_F3DEX) {
                 if (Cmd == (u8)G_ENDDL) { fprintf(ModelDump, "    gsSPEndDisplayList(),\n};\n\n"); break; }
 
                 switch(Cmd) {
-                    case G_VTX: fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n",
-                                    GetPlaceHolderName().c_str(), W1, (C0(10,6)), C0(16, 8) / 2); break;
+                    case G_VTX:
+                        fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, (C0(10,6)), C0(16, 8) / 2);
+                        break;
                     case (u8)G_TRI1: {
                         fprintf(ModelDump, "    gsSP1Triangle(%u, %u, %u, 0),\n", C1(16, 8) / 2, C1(8, 8) / 2, C1(0, 8) / 2);
                         break;
@@ -686,21 +701,27 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, 
                         fprintf(ModelDump, "    gsSP2Triangles(%u, %u, %u, 0, %u, %u, %u, 0),\n", C0(16, 8) / 2, C0(8, 8) / 2, C0(0, 8) / 2, C1(16, 8) / 2, C1(8, 8) / 2, C1(0, 8) / 2);
                         break;
                     }
-                    case (u8)G_CLEARGEOMETRYMODE: fprintf(ModelDump,"    gsSPClearGeometryMode(%s),\n",ConvertGeoMode(Rom, W1).c_str()); break;
-                    case (u8)G_SETGEOMETRYMODE: fprintf(ModelDump,"    gsSPSetGeometryMode(%s),\n",ConvertGeoMode(Rom, W1).c_str()); break;
-                    case G_MOVEMEM: fprintf(ModelDump,"    gsSPLight(&%s_light_0x%x.col, %u),\n",
-                                    GetPlaceHolderName().c_str(), W1, (C0(16,8)==0x88?2:1)); break;
+                    case (u8)G_CLEARGEOMETRYMODE:
+                        fprintf(ModelDump,"    gsSPClearGeometryMode(%s),\n",ConvertGeoMode(Rom, W1).c_str());
+                        break;
+                    case (u8)G_SETGEOMETRYMODE:
+                        fprintf(ModelDump,"    gsSPSetGeometryMode(%s),\n",ConvertGeoMode(Rom, W1).c_str());
+                        break;
+                    case G_MOVEMEM:
+                        fprintf(ModelDump,"    gsSPLight(&%s_light_0x%x.col, %u),\n", PlaceHolderName, W1, (C0(16,8)==0x88?2:1));
+                        break;
                     case G_DL: {
                         bool Branch = (C0(16, 1) == 0x01);
-                        fprintf(ModelDump,"    %s(%s_displaylist_0x%x),\n",
-                                Branch ? "gsSPBranchList" : "gsSPDisplayList", GetPlaceHolderName().c_str(), W1);
+                        fprintf(ModelDump,"    %s(%s_displaylist_0x%x),\n", Branch ? "gsSPBranchList" : "gsSPDisplayList", PlaceHolderName, W1);
                         if (Branch) {
                             fprintf(ModelDump, "};\n\n");
                             ShouldEnd = true;
                         }
                         break;
                     }
-                    case (u8)G_TEXTURE: fprintf(ModelDump,"    gsSPTexture(%u, %u, %u, %u, %u),\n",C1(16,16),C1(0,16),C0(11,3),C0(8,3),C0(0,8)); break;
+                    case (u8)G_TEXTURE:
+                        fprintf(ModelDump,"    gsSPTexture(%u, %u, %u, %u, %u),\n",C1(16,16),C1(0,16),C0(11,3),C0(8,3),C0(0,8));
+                        break;
                 }
             }
 

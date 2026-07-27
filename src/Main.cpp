@@ -176,7 +176,7 @@ int main(int argc, char** argv) {
     }
     
     if (GameType != GT_EDITOR) {
-        if (Rom.mSize >= BBP_SIGNATURE_ADDR) {
+        if (Rom.Size >= BBP_SIGNATURE_ADDR) {
             if (Rom.ReadBytesPhysical<u32>(BBP_SIGNATURE_ADDR) == BBP_SIGNATURE) {
                 GameType = GT_BBP;
                 GameTypeStr += "Bowser's Blueprints ";
