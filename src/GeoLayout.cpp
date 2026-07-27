@@ -333,7 +333,6 @@ std::string GeoCmdTransRot(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area
         CMD_HHHHHH(tx, ty, tz, rx, ry, rz), \
         CMD_PTR(displayList)
 
-    /**
      *   fieldLayout = 1: Translate
      *     0x02: s16 xTranslation
      *     0x04: s16 yTranslation
@@ -348,7 +347,6 @@ std::string GeoCmdTransRot(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area
         CMD_HH(ty, tz), \
         CMD_PTR(displayList)
 
-    /**
      *   fieldLayout = 2: Rotate
      *     0x02: s16 xRotation
      *     0x04: s16 yRotation
@@ -363,7 +361,6 @@ std::string GeoCmdTransRot(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area
         CMD_HH(ry, rz), \
         CMD_PTR(displayList)
 
-    /**
      *   fieldLayout = 3: Rotate Y
      *     0x02: s16 yRotation
      *     0x04: [u32 displayList: if MSbit of params set, display list segmented address]
@@ -393,12 +390,12 @@ std::string GeoCmdTransRot(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area
                 "{}, {}, {}",
                 Layer & ~(0x80 | 0x30), YRot, DisplayListName
             );
+        } else {
+            OutArgs = std::format(
+                "{}, {}",
+                Layer & ~0x30, YRot
+            );
         }
-
-        OutArgs = std::format(
-            "{}, {}",
-            Layer & ~0x30, YRot
-        );
     } else if (Layer & 0x20) {
         s16 XRot = Rom.ReadBytes<s16>(Start + 2);
         s16 YRot = Rom.ReadBytes<s16>(Start + 4);
@@ -415,12 +412,12 @@ std::string GeoCmdTransRot(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area
                 "{}, {}, {}, {}, {}",
                 Layer & ~(0x80 | 0x20), XRot, YRot, ZRot, DisplayListName
             );
+        } else {
+            OutArgs = std::format(
+                "{}, {}, {}, {}",
+                Layer & ~0x20, XRot, YRot, ZRot
+            );
         }
-
-        OutArgs = std::format(
-            "{}, {}, {}, {}",
-            Layer & ~0x20, XRot, YRot, ZRot
-        );
     } else if (Layer & 0x10) {
         s16 XTrans = Rom.ReadBytes<s16>(Start + 2);
         s16 YTrans = Rom.ReadBytes<s16>(Start + 4);
@@ -437,12 +434,12 @@ std::string GeoCmdTransRot(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area
                 "{}, {}, {}, {}, {}",
                 Layer & ~(0x80 | 0x10), XTrans, YTrans, ZTrans, DisplayListName
             );
+        } else {
+            OutArgs = std::format(
+                "{}, {}, {}, {}",
+                Layer & ~0x10, XTrans, YTrans, ZTrans
+            );
         }
-
-        OutArgs = std::format(
-            "{}, {}, {}, {}",
-            Layer & ~0x10, XTrans, YTrans, ZTrans
-        );
     } else {
         s16 XTrans = Rom.ReadBytes<s16>(Start + 4);
         s16 YTrans = Rom.ReadBytes<s16>(Start + 6);
@@ -462,12 +459,12 @@ std::string GeoCmdTransRot(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area
                 "{}, {}, {}, {}, {}, {}, {}, {}",
                 Layer & ~0x80, XTrans, YTrans, ZTrans, XRot, YRot, ZRot, DisplayListName
             );
+        } else {
+            OutArgs = std::format(
+                "{}, {}, {}, {}, {}, {}, {}",
+                Layer, XTrans, YTrans, ZTrans, XRot, YRot, ZRot
+            );
         }
-
-        OutArgs = std::format(
-            "{}, {}, {}, {}, {}, {}, {}",
-            Layer, XTrans, YTrans, ZTrans, XRot, YRot, ZRot
-        );
     }
 
     return OutArgs;
