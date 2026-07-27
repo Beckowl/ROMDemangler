@@ -857,21 +857,25 @@ void ExportLevel(N64Rom &Rom, u8 LvlID) {
     }
 
     //b'\x1b\x04\x00\x00\x03\x04\x00\x024\x04\x00\x00'
-    const u8 Pattern[] = {0x1b, 0x04, 0x00, 0x00, 0x03, 0x04, 0x00, 0x02, 0x34, 0x04, 0x00, 0x00};
-    size_t PatternLen = sizeof(Pattern);
     u32 Entry = 0;
-    u8* Start = Rom.mData;
-    u8* End = Rom.mData + Rom.mSize;
-    u8* Found = std::search(Start, End, Pattern, Pattern + PatternLen);
-    if (Found != End) {
-        Entry = (u32)(Found - Start);
-        if (!FoundScriptEntry) printf("Script Entry found at address: 0x%x\n", Entry);
-        FoundScriptEntry = true;
+    if (!FoundScriptEntry) {
+        const u8 Pattern[] = {0x1b, 0x04, 0x00, 0x00, 0x03, 0x04, 0x00, 0x02, 0x34, 0x04, 0x00, 0x00};
+        size_t PatternLen = sizeof(Pattern);
+        u8* Start = Rom.mData;
+        u8* End = Rom.mData + Rom.mSize;
+        u8* Found = std::search(Start, End, Pattern, Pattern + PatternLen);
+        if (Found != End) {
+            Entry = (u32)(Found - Start);
+            if (!FoundScriptEntry) printf("Script Entry found at address: 0x%x\n", Entry);
+            FoundScriptEntry = Entry;
+        } else {
+            printf("No Script Entries could be found.\n");
+            exit(1);
+        }
+        SegmentOffsets[0x10][0] = Entry;
     } else {
-        printf("No Script Entries could be found.\n");
-        exit(1);
+        Entry = SegmentOffsets[0x10][0] = FoundScriptEntry;
     }
-    SegmentOffsets[0x10][0] = Entry;
 
     auto ShouldPrintCmd = [&](u8 Cmd) {
         if (!Script.FoundLevel) {

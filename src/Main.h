@@ -8,6 +8,6 @@
 namespace fs = std::filesystem;
 
 extern bool VerbosePrinting;
-extern bool FoundScriptEntry;
+extern u32 FoundScriptEntry;
 extern bool IgnoreSegment0;
 extern std::string ActorsExport;

@@ -7,7 +7,7 @@
 bool VerbosePrinting = false;
 std::string ActorsExport = "none";
 enum SM64GameType GameType = GT_UNKNOWN;
-bool FoundScriptEntry = false;
+u32 FoundScriptEntry = 0;
 bool ExportSegment0 = false;
 bool IgnoreSegment0 = false;
 
