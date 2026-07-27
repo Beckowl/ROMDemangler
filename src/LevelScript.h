@@ -42,6 +42,8 @@ public:
     // these are from Quad64
     bool IsPerAreaBank0x0E(void);
     void SetAreaSegmented0x0E(N64Rom &Rom, u8 AreaID);
+
+    void AddDisplayList(u32 Address, u8 Area);
 };
 
 void ExportLevel(N64Rom &Rom, u8 LvlID);

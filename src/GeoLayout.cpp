@@ -384,7 +384,7 @@ std::string GeoCmdTransRot(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area
             std::string DisplayListName = "0";
             if (DisplayList) {
                 DisplayListName = GetGeoDLName(Script, Area, DisplayList);
-                Script.AreaDatas[Area].DisplayLists.push_back(DisplayList);
+                Script.AddDisplayList(DisplayList, Area);
             }
             OutArgs = std::format(
                 "{}, {}, {}",
@@ -406,7 +406,7 @@ std::string GeoCmdTransRot(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area
             std::string DisplayListName = "0";
             if (DisplayList) {
                 DisplayListName = GetGeoDLName(Script, Area, DisplayList);
-                Script.AreaDatas[Area].DisplayLists.push_back(DisplayList);
+                Script.AddDisplayList(DisplayList, Area);
             }
             OutArgs = std::format(
                 "{}, {}, {}, {}, {}",
@@ -428,7 +428,7 @@ std::string GeoCmdTransRot(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area
             std::string DisplayListName = "0";
             if (DisplayList) {
                 DisplayListName = GetGeoDLName(Script, Area, DisplayList);
-                Script.AreaDatas[Area].DisplayLists.push_back(DisplayList);
+                Script.AddDisplayList(DisplayList, Area);
             }
             OutArgs = std::format(
                 "{}, {}, {}, {}, {}",
@@ -453,7 +453,7 @@ std::string GeoCmdTransRot(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area
             std::string DisplayListName = "0";
             if (DisplayList) {
                 DisplayListName = GetGeoDLName(Script, Area, DisplayList);
-                Script.AreaDatas[Area].DisplayLists.push_back(DisplayList);
+                Script.AddDisplayList(DisplayList, Area);
             }
             OutArgs = std::format(
                 "{}, {}, {}, {}, {}, {}, {}, {}",
@@ -501,10 +501,7 @@ std::string GeoCmdTransNode(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Are
         std::string DisplayListName = "0";
         if (DisplayList) {
             DisplayListName = GetGeoDLName(Script, Area, DisplayList);
-        }
-
-        if (DisplayList) {
-            Script.AreaDatas[Area].DisplayLists.push_back(DisplayList);
+            Script.AddDisplayList(DisplayList, Area);
         }
 
         OutArgs = std::format(
@@ -552,10 +549,7 @@ std::string GeoCmdRotNode(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area)
         std::string DisplayListName = "0";
         if (DisplayList) {
             DisplayListName = GetGeoDLName(Script, Area, DisplayList);
-        }
-
-        if (DisplayList) {
-            Script.AreaDatas[Area].DisplayLists.push_back(DisplayList);
+            Script.AddDisplayList(DisplayList, Area);
         }
 
         OutArgs = std::format(
@@ -596,15 +590,12 @@ std::string GeoCmdAnimatedPart(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 
     std::string DisplayListName = "0";
     if (DisplayList) {
         DisplayListName = GetGeoDLName(Script, Area, DisplayList);
+        Script.AddDisplayList(DisplayList, Area);
     }
     std::string OutArgs = std::format(
         "{}, {}, {}, {}, {}",
         Layer, TransX, TransY, TransZ, DisplayListName
     );
-
-    if (DisplayList) {
-        Script.AreaDatas[Area].DisplayLists.push_back(DisplayList);
-    }
 
     return OutArgs;
 };
@@ -642,8 +633,7 @@ std::string GeoCmdBillboard(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Are
         std::string DisplayListName = "0";
         if (DisplayList) {
             DisplayListName = GetGeoDLName(Script, Area, DisplayList);
-
-            Script.AreaDatas[Area].DisplayLists.push_back(DisplayList);
+            Script.AddDisplayList(DisplayList, Area);
         }
         OutArgs = std::format(
             "{}, {}, {}, {}, {}",
@@ -677,15 +667,12 @@ std::string GeoCmdDisplayList(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 A
     std::string DisplayListName = "0";
     if (DisplayList) {
         DisplayListName = GetGeoDLName(Script, Area, DisplayList);
+        Script.AddDisplayList(DisplayList, Area);
     }
     std::string OutArgs = std::format(
         "{}, {}",
         Layer, DisplayListName
     );
-
-    if (DisplayList) {
-        Script.AreaDatas[Area].DisplayLists.push_back(DisplayList);
-    }
 
     return OutArgs;
 };
@@ -835,10 +822,7 @@ std::string GeoCmdScale(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area) {
         std::string DisplayListName = "0";
         if (DisplayList) {
             DisplayListName = GetGeoDLName(Script, Area, DisplayList);
-        }
-
-        if (DisplayList) {
-            Script.AreaDatas[Area].DisplayLists.push_back(DisplayList);
+            Script.AddDisplayList(DisplayList, Area);
         }
 
         OutArgs = std::format(

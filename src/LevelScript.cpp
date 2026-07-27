@@ -71,6 +71,16 @@ void LevelScript::SetAreaSegmented0x0E(N64Rom &Rom, u8 AreaID) {
     LoadSegment(Rom, 0x0E, Start, End);
 }
 
+void LevelScript::AddDisplayList(u32 Address, u8 Area) {
+    if (!ValidateMemAddr(Address)) return;
+
+    if (CurrentActor) {
+        CurrentActor->DisplayLists.push_back(Address);
+    } else {
+        AreaDatas[Area].DisplayLists.push_back(Address);
+    }
+}
+
 std::string LvlCommandsName[] = {
     "EXECUTE",
     "EXIT_AND_EXECUTE",
