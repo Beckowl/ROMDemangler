@@ -53,9 +53,9 @@ void InitMemoryMap() {
 }
 
 std::string GetLabelFromMap(u32 Address) {
-    auto it = SymbolMap.find(Address);
-    if (it != SymbolMap.end()) {
-        return it->second;
+    auto SymIt = SymbolMap.find(Address);
+    if (SymIt != SymbolMap.end()) {
+        return SymIt->second;
     }
 
     return std::format("Custom_{:#x}", Address);
@@ -98,7 +98,7 @@ std::vector<u8> DecompressSegment(N64Rom &Rom, u8 Segment, u32 RomStart, u32 Rom
     } else if (HeaderMagic[0] == 'R' && HeaderMagic[1] == 'N' && HeaderMagic[2] == 'C') {
         return DecompressRNC(Rom, RomStart);
     } else if (HeaderMagic[0] == 'Y' && HeaderMagic[1] == 'A' && HeaderMagic[2] == 'Y' && HeaderMagic[3] == '0') {
-            return DecompressYAY0(Rom, RomStart);
+        return DecompressYAY0(Rom, RomStart);
     } else {
         printf("Tried to decompress segment 0x%02x which is not compressed\n", Segment);
         u32 Size = RomEnd - RomStart;

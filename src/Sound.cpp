@@ -25,7 +25,7 @@ u32 FindSeqFileHeader(N64Rom &Rom) {
 
         bool Valid = true;
 
-        u32 LastOffset = Offset0;
+        //u32 LastOffset = Offset0;
 
         for (u32 S = 0; S < SeqCount; S++) {
             u32 Off = Rom.ReadBytesPhysical<u32>(I + 4 + S * 8);
@@ -41,14 +41,18 @@ u32 FindSeqFileHeader(N64Rom &Rom) {
                 break;
             }
 
-            if (S) {
+            if (Off & 0xF) {
+                Valid = false;
+            }
+
+            /*if (S) {
                 if (Off < LastOffset) {
                     Valid = false;
                     break;
                 }
-            }
+            }*/
 
-            LastOffset = Off;
+            //LastOffset = Off;
         }
 
         if (!Valid) continue;
@@ -68,7 +72,7 @@ u32 FindSeqFileHeader(N64Rom &Rom) {
         printf("  0x%08x  (count: %u, revision: %u)\n", SeqFile.Offset, SeqFile.SeqCount, SeqFile.Revision);
     }
 
-    printf("\nSelected: 0x%08x\n", ALSeqFiles.front().Offset);
+    printf("Selected: 0x%08x\n", ALSeqFiles.front().Offset);
 
     return ALSeqFiles.front().Offset;
 }
