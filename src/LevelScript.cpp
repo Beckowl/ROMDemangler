@@ -776,7 +776,11 @@ std::string LvlCmdSetMusic(N64Rom &Rom, LevelScript &Script, u32 &Start) {
     s16 Preset = Rom.ReadBytes<s16>(Start + 2, false);
     s16 Sequence = Rom.ReadBytes<s16>(Start + 4, false);
 
-    if (Sequence) SequenceMusics.push_back(Sequence);
+    if (Sequence) {
+        if (!SequenceMusics.count(Sequence)) {
+            SequenceMusics.insert(Sequence);
+        }
+    }
 
     std::string OutArgs = std::format(
         "{:#x}, {:#x}",

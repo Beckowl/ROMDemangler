@@ -1,6 +1,6 @@
 #include "Sound.h"
 
-std::vector<u8> SequenceMusics;
+std::set<u8> SequenceMusics;
 
 void ExportSequence(N64Rom &Rom, u8 SeqID, const char *FilePath) {
     FILE *SeqDump = fopen(FilePath, "wb");
