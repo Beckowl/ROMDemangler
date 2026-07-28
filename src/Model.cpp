@@ -135,6 +135,8 @@ F3DTexture &GetCurrTex(std::vector<F3DTexture> &Textures) {
     return Textures.back();
 }
 
+// rdp commands are always the same width and format in every
+// f3d version so i just have this
 void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd, bool Write, bool IsActor = false, Actor *Act = nullptr, FILE *ModelDump = nullptr, std::string LvlName="", u8 Area=0) {
     static u32 CurrentLoadBitDepth = 16;
     
@@ -239,6 +241,12 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
                 break;
             case G_LOADTLUT:
                 fprintf(ModelDump,"    //gsDPLoadTLUTCmd(%u, %u),\n",C1(24,3),C1(14,10));
+                break;
+            case G_SETENVCOLOR:
+                fprintf(ModelDump,"    gsDPSetEnvColor(%u, %u, %u, %u),\n", C1(24, 8), C1(16, 8), C1(8, 8), C1(0, 8));
+                break;
+            case G_SETPRIMCOLOR:
+                fprintf(ModelDump,"    gsDPSetPrimColor(0, 0, %u, %u, %u, %u),\n", C1(24, 8), C1(16, 8), C1(8, 8), C1(0, 8));
                 break;
             case G_SETCOMBINE: {
                 const char *A0First = F3D_CC(CC_PART_A, C0(20, 4));
