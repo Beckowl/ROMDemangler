@@ -12,7 +12,7 @@ void ExportActors(N64Rom &Rom, LevelScript &Script) {
 
     for (auto &Act : Script.Actors) {
         if (!ValidateMemAddr(Act.Addr)) {
-            printf("Actor 0x%08x has an invalid address, ignoring export\n", Act.Addr);
+            printf("Actor 0x%08x has an invalid address, Skipping\n", Act.Addr);
             continue;
         }
         if (ExportedActors[Act.Addr] && (Act.Addr >> 24) == 0) continue;

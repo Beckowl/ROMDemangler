@@ -900,7 +900,7 @@ void ExportLevel(N64Rom &Rom, u8 LvlID) {
     while (true) {
         u8 Cmd = Rom.ReadBytes<u8>(Entry, false);
         if (Cmd > 60) {
-            printf("Unknown LevelScript Command at address 0x%x\n", Entry);
+            printf("Unknown LevelScript Command 0x%x at address 0x%x\n", Cmd, Entry);
             break;
         }
         //printf("0x%x CMD: 0x%x\n", Entry, Cmd);

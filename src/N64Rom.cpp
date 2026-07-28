@@ -90,11 +90,16 @@ void N64Rom::OpenFile(const char *Path, const char *RAMPath) {
         if (FoundUCode.find("fifo") != std::string::npos) ExtraConfig += " [FIFO]";
         if (FoundUCode.find("xbus") != std::string::npos) ExtraConfig += " [XBUS]";
         if (FoundUCode.find("NoN") != std::string::npos) ExtraConfig += " [NoN]";
-    }
+    } /*else {
+        if (memmem(Data, Size, Fast3D_102695_Data, sizeof(Fast3D_102695_Data))) {
+            FoundUCode = "F3D 1.0.2695";
+            Microcode = UCODE_F3D;
+        }
+    }*/
 
     if (Microcode == UCODE_UNKNOWN) {
-        printf("Unsupported Microcode detected!\n");
-        exit(1);
+        printf("Unsupported Microcode detected, using F3D\n");
+        Microcode = UCODE_F3D;
     }
 
     printf("Microcode Details:\n");

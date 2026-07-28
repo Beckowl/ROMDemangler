@@ -311,7 +311,7 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList, std::vector<F3DVert
                     if (ValidateMemAddr(W1)) {
                         ParseDisplayListRecursive(Rom, W1, Vertices, Ambients, Lights, Textures, DLs, CallStack);
                     } else {
-                        if (VerbosePrinting) printf("DisplayList 0x%08x has an invalid address, ignoring export\n", W1);
+                        if (VerbosePrinting) printf("DisplayList 0x%08x has an invalid address, Skipping\n", W1);
                     }
                     if (Branch) return;
                     break;
@@ -339,7 +339,7 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList, std::vector<F3DVert
                     if (ValidateMemAddr(W1)) {
                         ParseDisplayListRecursive(Rom, W1, Vertices, Ambients, Lights, Textures, DLs, CallStack);
                     } else {
-                       if (VerbosePrinting) printf("DisplayList 0x%08x has an invalid address, ignoring export\n", W1);
+                       if (VerbosePrinting) printf("DisplayList 0x%08x has an invalid address, Skipping\n", W1);
                     }
                     if (Branch) return;
                     break;
@@ -369,7 +369,7 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList, std::vector<F3DVert
                     if (ValidateMemAddr(W1)) {
                         ParseDisplayListRecursive(Rom, W1, Vertices, Ambients, Lights, Textures, DLs, CallStack);
                     } else {
-                        if (VerbosePrinting) printf("DisplayList 0x%08x has an invalid address, ignoring export\n", W1);
+                        if (VerbosePrinting) printf("DisplayList 0x%08x has an invalid address, Skipping\n", W1);
                     }
                     if (Branch) return;
                     break;
