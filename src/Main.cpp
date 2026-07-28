@@ -222,8 +222,15 @@ int main(int argc, char** argv) {
     if (fs::exists("output")) fs::remove_all("output", ErrCode);
     fs::create_directories("output");
 
-    for (const int &LvlID : LvlIDs) {
-        ExportLevel(Rom, LvlID);
+    if (std::find(LvlIDs.begin(), LvlIDs.end(), 99) != LvlIDs.end()) {
+        for (const auto &[LvlID, Name] : LevelNames) {
+            if (LvlID == 25) continue;
+            ExportLevel(Rom, LvlID);
+        }
+    } else {
+        for (const int &LvlID : LvlIDs) {
+            ExportLevel(Rom, LvlID);
+        }
     }
 
     ExportSequences(Rom);

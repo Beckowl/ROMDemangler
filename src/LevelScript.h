@@ -17,6 +17,8 @@
 #include "Actor.h"
 #include "Decompress.h"
 
+extern std::map<u8, std::string> LevelNames;
+
 struct AreaData {
     u32 GeoLayout = 0;
     u32 Collision = 0;
