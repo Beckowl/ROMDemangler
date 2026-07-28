@@ -11,6 +11,10 @@ ifeq ($(ASAN),1)
 	LDFLAGS += -fsanitize=address -fsanitize=undefined
 endif
 
+ifeq ($(OS),Windows_NT)
+    LDFLAGS += -static
+endif
+
 SOURCES := $(wildcard $(addsuffix /*.cpp,$(DIRECTORIES)))
 
 OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(SOURCES))
