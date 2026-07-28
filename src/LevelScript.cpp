@@ -5,6 +5,7 @@
 #include "Collision.h"
 #include "MovingTexture.h"
 #include "Model.h"
+#include "Sound.h"
 #include "Memory.h"
 
 std::map<u8, std::string> LevelNames = {
@@ -774,6 +775,8 @@ std::string LvlCmdSetMusic(N64Rom &Rom, LevelScript &Script, u32 &Start) {
 
     s16 Preset = Rom.ReadBytes<s16>(Start + 2, false);
     s16 Sequence = Rom.ReadBytes<s16>(Start + 4, false);
+
+    if (Sequence) SequenceMusics.push_back(Sequence);
 
     std::string OutArgs = std::format(
         "{:#x}, {:#x}",

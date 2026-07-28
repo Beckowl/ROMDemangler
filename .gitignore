@@ -1,5 +1,6 @@
 *.z64
 *.c
+*.m64
 *.png
 *.lua
 build/

@@ -1,5 +1,6 @@
 #include "LevelScript.h"
 #include "Coop.h"
+#include "Sound.h"
 #include "Decompress.h"
 #include "Memory.h"
 #include "cxxopts.hpp"
@@ -225,6 +226,7 @@ int main(int argc, char** argv) {
         ExportLevel(Rom, LvlID);
     }
 
+    ExportSequences(Rom);
     ExportLua(Rom);
     Rom.CloseFile();
     return 0;
