@@ -43,18 +43,18 @@ public:
     void OpenFile(const char *Path, const char *RAMPath);
 
     template <typename T>
-    T ReadBytesPhysical(s32 Offset) const {
+    T ReadBytesPhysical(s32 Offset) {
         T Buf{};
-        constexpr size_t RealSize = sizeof(T);
+        size_t RealSize = sizeof(T);
         if (Offset + RealSize > Size) return Buf;
         memcpy(&Buf, Data + Offset, RealSize);
-        if constexpr (std::is_integral_v<T> && RealSize > 1) {
+        if (RealSize > 1) {
             Buf = SwapEndian(Buf);
         }
         return Buf;
     }
     template <typename T>
-    T ReadBytes(u32 SegAddr, bool Seg0AsRAM=true) const {
+    T ReadBytes(u32 SegAddr, bool Seg0AsRAM=true) {
         T Buf{};    
         u8 Bank = SegAddr >> 24;
         u32 Offset = SegAddr & 0xFFFFFF;
@@ -69,7 +69,7 @@ public:
             if (Offset + RealSize > Seg.size()) return Buf;
 
             memcpy(&Buf, Seg.data() + Offset, RealSize);
-            if constexpr (std::is_integral_v<T> && sizeof(T) > 1) {
+            if (RealSize > 1) {
                 Buf = SwapEndian(Buf);
             }
             return Buf;
@@ -77,9 +77,9 @@ public:
 
         if (Bank == 0 && ExportSegment0 && Seg0AsRAM) {
             T Buf{};
-            constexpr size_t RealSize = sizeof(T);
+            size_t RealSize = sizeof(T);
             memcpy(&Buf, RAM + Offset, RealSize);
-            if constexpr (std::is_integral_v<T> && RealSize > 1) {
+            if (RealSize > 1) {
                 Buf = SwapEndian(Buf);
             }
             return Buf;
@@ -94,7 +94,7 @@ public:
         if (Offset + RealSize > Size) return Buf;
         memcpy(Buf, Data + Offset, RealSize);
 
-        if constexpr (std::is_integral_v<T> && sizeof(T) > 1) {
+        if (sizeof(T) > 1) {
             for (u32 i = 0; i < Len; i++) {
                 Buf[i] = SwapEndian(Buf[i]);
             }

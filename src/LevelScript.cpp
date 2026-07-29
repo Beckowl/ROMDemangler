@@ -293,7 +293,7 @@ std::string LvlCmdJumpLink(N64Rom &Rom, LevelScript &Script, u32 &Start) {
         Start = Target;
     }
 
-    if (VerbosePrinting) printf("Push Current address & Jump to 0x%x and save 0x%x (0x%x)\n", Target, Saved, SegmentedToROM(Saved));
+    if (VerbosePrinting) printf("Push & Jump to 0x%x and save 0x%x (0x%x)\n", Target, Saved, SegmentedToROM(Saved));
 
     return OutArgs;
 };
