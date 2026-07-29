@@ -20,7 +20,7 @@ void ExportLua(N64Rom &Rom) {
         fprintf(LuaDump, "movtexqc_register(\"%s_%u_movtext_%u\", %u, %u, %u)\n", MovTexQC.LvlName.c_str(), MovTexQC.Area, MovTexQC.Index, MovTexQC.LvlID, MovTexQC.Area, Type);
     }
     for (const auto &Music : SequenceMusics) {
-        fprintf(LuaDump, "smlua_audio_utils_replace_sequence(%u, %u, %u, \"seq_%02d\")\n", Music, GetSeqBank(Rom, Music), 80, Music);
+        fprintf(LuaDump, "smlua_audio_utils_replace_sequence(0x%02x, 0x%02x, %u, \"seq_0x%02x\")\n", Music, GetSeqNLST(Rom, Music), 80, Music);
     }
     fclose(LuaDump);
 }

@@ -1,15 +1,16 @@
 #include "Sound.h"
 
-struct ALSeqFile {
-    u32 Offset;
-    u16 Revision;
-    u16 SeqCount;
+class ALSeqFile {
+public:
+    u32 Offset = 0;
+    u16 Revision = 0;
+    u16 SeqCount = 0;
 };
 
-static u32 SeqFileHeader = 0;
+static ALSeqFile *SeqFileHeader;
 std::set<u8> SequenceMusics = {1, 2, 11, 13, 14, 15, 16, 18, 20, 21, 22, 23, 27, 28, 29, 30, 31, 32, 33};
 
-u32 FindSeqFileHeader(N64Rom &Rom) {
+ALSeqFile *FindSeqFileHeader(N64Rom &Rom) {
     std::vector<ALSeqFile> ALSeqFiles;
 
     for (u32 I = 0x100000; I < Rom.Size - 16; I += 16) {
@@ -43,6 +44,7 @@ u32 FindSeqFileHeader(N64Rom &Rom) {
 
             if (Off & 0xF) {
                 Valid = false;
+                break;
             }
 
             /*if (S) {
@@ -60,7 +62,9 @@ u32 FindSeqFileHeader(N64Rom &Rom) {
         ALSeqFiles.push_back({ I, Revision, SeqCount });
     }
 
-    if (ALSeqFiles.empty()) return 0;
+    if (ALSeqFiles.empty()) {
+        return nullptr;
+    }
 
     std::sort(ALSeqFiles.begin(), ALSeqFiles.end(),
         [](const ALSeqFile& a, const ALSeqFile& b) {
@@ -74,13 +78,15 @@ u32 FindSeqFileHeader(N64Rom &Rom) {
 
     printf("Selected: 0x%08x\n", ALSeqFiles.front().Offset);
 
-    return ALSeqFiles.front().Offset;
+    static ALSeqFile Result;
+    Result = ALSeqFiles.front();
+    return &Result;
 }
 
 void ExportSequence(N64Rom &Rom, u8 SeqID, const char *FilePath) {
     FILE *SeqDump = fopen(FilePath, "wb");
 
-    u32 SeqFileOffset = SeqFileHeader + 4 + (SeqID * 8);
+    u32 SeqFileOffset = SeqFileHeader->Offset + 4 + (SeqID * 8);
     u32 SeqOffset = Rom.ReadBytesPhysical<u32>(SeqFileOffset);
     u32 SeqLength = Rom.ReadBytesPhysical<u32>(SeqFileOffset + 4);
 
@@ -91,7 +97,7 @@ void ExportSequence(N64Rom &Rom, u8 SeqID, const char *FilePath) {
     }
 
     std::vector<u8> M64Data(SeqLength);
-    Rom.ReadBytesPtr<u8>(SeqFileHeader + SeqOffset, M64Data.data(), SeqLength);
+    Rom.ReadBytesPtr<u8>(SeqFileHeader->Offset + SeqOffset, M64Data.data(), SeqLength);
 
     fwrite(M64Data.data(), 1, SeqLength, SeqDump);
     fclose(SeqDump);
@@ -110,8 +116,12 @@ void ExportSequences(N64Rom &Rom) {
     }
 
     for (auto &I : SequenceMusics) {
+        if (SeqFileHeader->SeqCount <= I) {
+            printf("Sequence 0x%02x is out of bounds, Skipping\n", I);
+            continue;
+        }
         char FileName[256];
-        sprintf(FileName, "seq_%02d.m64", I);
+        sprintf(FileName, "seq_0x%02x.m64", I);
         std::string FilePath = MusicPath + "/" + std::string(FileName);
 
         ExportSequence(Rom, I, FilePath.c_str());
@@ -120,7 +130,7 @@ void ExportSequences(N64Rom &Rom) {
 
 // no proper way to find this without emulation i think?
 // idk im tired, i already did alot of shit for ALSeqFile finding
-u8 GetSeqBank(N64Rom &Rom, u8 SeqID) {
+u8 GetSeqNLST(N64Rom &Rom, u8 SeqID) {
     u32 SeqMagic = (GameType == GT_DECOMP) ? 0x7b0800 : 0x7f0000;
 
     u32 Entry = SeqMagic + SeqID * 2;

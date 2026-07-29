@@ -289,7 +289,7 @@ std::string LvlCmdJumpLink(N64Rom &Rom, LevelScript &Script, u32 &Start) {
         Start += 8;
     } else {
         Script.Stack.push_back(Saved);
-        Script.StackTop += 1;
+        Script.StackTop++;
         Start = Target;
     }
 
