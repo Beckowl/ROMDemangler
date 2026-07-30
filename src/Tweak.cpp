@@ -81,20 +81,20 @@ u32 ReadValueFromTweak(N64Rom &Rom, const ROMTweak &Tweak) {
 std::string GetRomTweaks(N64Rom &Rom) {
     std::string Tweaks = "";
 
-    for (const auto& entry : StarPositions) {
+    for (const auto &StarPos : StarPositions) {
         f32 X, Y, Z;
 
-        if (entry.isS16) {
-            X = (f32)(Rom.ReadBytesPhysical<s16>(entry.Address));
-            Y = (f32)(Rom.ReadBytesPhysical<s16>(entry.Address + 2));
-            Z = (f32)(Rom.ReadBytesPhysical<s16>(entry.Address + 4));
+        if (StarPos.isS16) {
+            X = (f32)(Rom.ReadBytesPhysical<s16>(StarPos.Address));
+            Y = (f32)(Rom.ReadBytesPhysical<s16>(StarPos.Address + 2));
+            Z = (f32)(Rom.ReadBytesPhysical<s16>(StarPos.Address + 4));
         } else {
-            X = Rom.ReadBytesPhysical<f32>(entry.Address);
-            Y = Rom.ReadBytesPhysical<f32>(entry.Address + 4);
-            Z = Rom.ReadBytesPhysical<f32>(entry.Address + 8);
+            X = Rom.ReadBytesPhysical<f32>(StarPos.Address);
+            Y = Rom.ReadBytesPhysical<f32>(StarPos.Address + 4);
+            Z = Rom.ReadBytesPhysical<f32>(StarPos.Address + 8);
         }
 
-        Tweaks += "vec3f_set(gLevelValues.starPositions." + entry.Name + ", ";
+        Tweaks += "vec3f_set(gLevelValues.starPositions." + StarPos.Name + ", ";
         Tweaks += std::to_string((s32)X) + ", " + std::to_string((s32)Y) + ", " + std::to_string((s32)Z) + ")\n";
     }
 
