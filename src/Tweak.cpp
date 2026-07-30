@@ -94,7 +94,7 @@ std::string GetRomTweaks(N64Rom &Rom) {
             Z = Rom.ReadBytesPhysical<f32>(entry.Address + 8);
         }
 
-        Tweaks += "vec3s_set(gLevelValues.starPositions." + entry.Name + ", ";
+        Tweaks += "vec3f_set(gLevelValues.starPositions." + entry.Name + ", ";
         Tweaks += std::to_string((s32)X) + ", " + std::to_string((s32)Y) + ", " + std::to_string((s32)Z) + ")\n";
     }
 
