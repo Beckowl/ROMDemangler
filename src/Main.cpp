@@ -7,6 +7,8 @@
 
 bool VerbosePrinting = false;
 std::string ActorsExport = "none";
+bool SoundExport = false;
+bool TweakExport = false;
 enum SM64GameType GameType = GT_UNKNOWN;
 u32 FoundScriptEntry = 0;
 bool ExportSegment0 = false;
@@ -149,12 +151,16 @@ int main(int argc, char** argv) {
         ("rom", "ROM file", cxxopts::value<std::string>())
         ("levels", "List of level IDs to export", cxxopts::value<std::vector<int>>())
         ("actors", "Which actors to export, vanilla|custom|all|none", cxxopts::value<std::string>())
+        ("sound", "Export Sound data", cxxopts::value<bool>())
+        ("tweaks", "Export Tweaks", cxxopts::value<bool>())
         ("ram", "The File/Memory to get Segment 0 from", cxxopts::value<std::string>())
         ("verbose", "Print more info", cxxopts::value<bool>())
         ("ignore-seg-0", "Don't export stuff from Segment 0", cxxopts::value<bool>())
         ("h,help", "Print usage");
 
     auto Result = Options.parse(argc, argv);
+    SoundExport = Result["sound"].as<bool>();
+    TweakExport = Result["tweaks"].as<bool>();
     VerbosePrinting = Result["verbose"].as<bool>();
     IgnoreSegment0 = Result["ignore-seg-0"].as<bool>();
     std::string RAMPath;
@@ -250,7 +256,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    ExportSequences(Rom);
+    if (SoundExport) ExportSequences(Rom);
     ExportLua(Rom);
     Rom.CloseFile();
     return 0;

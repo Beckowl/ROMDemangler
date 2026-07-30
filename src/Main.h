@@ -7,6 +7,8 @@
 
 namespace fs = std::filesystem;
 
+extern bool SoundExport;
+extern bool TweakExport;
 extern bool VerbosePrinting;
 extern u32 FoundScriptEntry;
 extern bool IgnoreSegment0;

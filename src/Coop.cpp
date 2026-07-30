@@ -21,12 +21,16 @@ void ExportLua(N64Rom &Rom) {
         u16 Type = 1; /*MovTexQC.Type*/
         fprintf(LuaDump, "movtexqc_register(\"%s_%u_movtext_%u\", %u, %u, %u)\n", MovTexQC.LvlName.c_str(), MovTexQC.Area, MovTexQC.Index, MovTexQC.LvlID, MovTexQC.Area, Type);
     }
-    fprintf(LuaDump, "\n-- Audio\n");
-    for (const auto &Music : SequenceMusics) {
-        fprintf(LuaDump, "smlua_audio_utils_replace_sequence(0x%02x, 0x%02x, %u, \"seq_0x%02x\")\n", Music, GetSeqNLST(Rom, Music), 80, Music);
+    if (SoundExport) {
+        fprintf(LuaDump, "\n-- Audio\n");
+        for (const auto &Music : SequenceMusics) {
+            fprintf(LuaDump, "smlua_audio_utils_replace_sequence(0x%02x, 0x%02x, %u, \"seq_0x%02x\")\n", Music, GetSeqNLST(Rom, Music), 80, Music);
+        }
     }
-    if (GameType == GT_ROM_MANAGER || GameType == GT_EDITOR) {
-        fprintf(LuaDump, "\n-- Tweaks\n%s", GetRomTweaks(Rom).c_str());
+    if (TweakExport) {
+        if (GameType == GT_ROM_MANAGER || GameType == GT_EDITOR) {
+            fprintf(LuaDump, "\n-- Tweaks\n%s", GetRomTweaks(Rom).c_str());
+        }
     }
     fclose(LuaDump);
 }
