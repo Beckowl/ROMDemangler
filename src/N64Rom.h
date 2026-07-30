@@ -103,8 +103,22 @@ public:
     }
 
     template <typename T>
-    static inline T SwapEndian(T val) {
-        return std::byteswap(val);
+    static inline T SwapEndian(T Val) {
+        if constexpr(sizeof(T) == 1) {
+            return Val;
+        } else if constexpr(std::is_integral_v<T>) {
+            return std::byteswap(Val);
+        } else if constexpr(std::is_floating_point_v<T>) {
+            if constexpr(sizeof(T) == 4) {
+                auto Bits = std::bit_cast<uint32_t>(Val);
+                return std::bit_cast<T>(std::byteswap(Bits));
+            } 
+            else if constexpr(sizeof(T) == 8) {
+                auto Bits = std::bit_cast<uint64_t>(Val);
+                return std::bit_cast<T>(std::byteswap(Bits));
+            }
+        }
+        return Val;
     }
 
     void CloseFile(void);

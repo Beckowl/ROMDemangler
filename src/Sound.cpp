@@ -1,7 +1,6 @@
 #include "Sound.h"
 
-class ALSeqFile {
-public:
+struct ALSeqFile {
     u32 Offset = 0;
     u16 Revision = 0;
     u16 SeqCount = 0;
@@ -128,8 +127,6 @@ void ExportSequences(N64Rom &Rom) {
     }
 }
 
-// no proper way to find this without emulation i think?
-// idk im tired, i already did alot of shit for ALSeqFile finding
 u8 GetSeqNLST(N64Rom &Rom, u8 SeqID) {
     u32 SeqMagic = (GameType == GT_DECOMP) ? 0x7b0800 : 0x7f0000;
 
