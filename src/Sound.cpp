@@ -8,6 +8,7 @@ struct ALSeqFile {
 
 static ALSeqFile *SeqFileHeader;
 std::set<u8> SequenceMusics = {1, 2, 11, 13, 14, 15, 16, 18, 20, 21, 22, 23, 27, 28, 29, 30, 31, 32, 33};
+std::vector<std::string> SequenceNames;
 
 ALSeqFile *FindSeqFileHeader(N64Rom &Rom) {
     std::vector<ALSeqFile> ALSeqFiles;
@@ -113,10 +114,21 @@ void ExportSequences(N64Rom &Rom) {
         printf("No ALSeqFile could be found.\n");
         return;
     }
+    if (GameType == GT_ROM_MANAGER || GameType == GT_EDITOR) {
+        GetSequenceNames(Rom);
+    }
+
+    bool UseNames = !SequenceNames.empty();
 
     for (auto &I : SequenceMusics) {
         if (SeqFileHeader->SeqCount <= I) {
             printf("Sequence 0x%02x is out of bounds, Skipping\n", I);
+            continue;
+        }
+        if (UseNames) {
+            std::string Name = SequenceNames[I];
+            std::string FilePath = MusicPath + "/" + Name + ".m64";
+            ExportSequence(Rom, I, FilePath.c_str());
             continue;
         }
         char FileName[256];
@@ -124,6 +136,26 @@ void ExportSequences(N64Rom &Rom) {
         std::string FilePath = MusicPath + "/" + std::string(FileName);
 
         ExportSequence(Rom, I, FilePath.c_str());
+    }
+}
+
+void GetSequenceNames(N64Rom &Rom) {
+    u32 Entry = 0x7F1000;
+    for (int I = 0; I < SeqFileHeader->SeqCount; I++) {
+        u8 NameLen = Rom.ReadBytesPhysical<u8>(Entry);
+        
+        if (NameLen == 0xFF) {
+            break;
+        }
+
+        std::string Name;
+        if (NameLen > 0) {
+            Name.resize(NameLen);
+            Rom.ReadBytesPtr<char>(Entry + 1, &Name[0], NameLen);
+        }
+        SequenceNames.push_back(Name);
+
+        Entry += 1 + NameLen;
     }
 }
 
