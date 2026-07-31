@@ -22,6 +22,7 @@ extern std::map<u8, std::string> LevelNames;
 struct AreaData {
     u32 GeoLayout = 0;
     u32 Collision = 0;
+    u32 MacroObjects = 0;
     u8 WaterBoxCount = 0;
     std::vector<s16> WaterBoxParams = {};
     std::vector<u32> DisplayLists = {};

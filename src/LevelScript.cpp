@@ -6,6 +6,7 @@
 #include "MovingTexture.h"
 #include "Model.h"
 #include "Sound.h"
+#include "MacroObject.h"
 #include "Memory.h"
 
 std::map<u8, std::string> LevelNames = {
@@ -141,7 +142,7 @@ std::string LvlCommandsName[] = {
     "SET_BACKGROUND_MUSIC",
     "SET_MENU_MUSIC",
     "STOP_MUSIC",
-    "//MACRO_OBJECTS",
+    "MACRO_OBJECTS",
     "CMD3A",
     "WHIRLPOOL",
     "GET_OR_SET",
@@ -790,6 +791,25 @@ std::string LvlCmdSetMusic(N64Rom &Rom, LevelScript &Script, u32 &Start) {
     return OutArgs;
 };
 
+std::string LvlCmdMacroObjects(N64Rom &Rom, LevelScript &Script, u32 &Start) {
+    /*
+    #define MACRO_OBJECTS(objList) \
+    CMD_BBH(0x39, 0x08, 0x0000), \
+    CMD_PTR(objList)
+    */
+
+    u32 MacroObjList = Rom.ReadBytes<u32>(Start + 4, false);
+
+    std::string OutArgs = std::format(
+        "{}_{}_macro_objects_{:#x}",
+        Script.Name, Script.CurrArea, MacroObjList
+    );
+
+    Script.AreaDatas[Script.CurrArea].MacroObjects = MacroObjList;
+
+    return OutArgs;
+};
+
 std::string LvlCmdStub(N64Rom &Rom, LevelScript &Script, u32 &Start) {
     return "";
 };
@@ -809,7 +829,7 @@ std::string (*LvlCommandsFunctions[])(N64Rom &Rom, LevelScript &Script, u32 &Sta
     (LvlCmdStub),           (LvlCmdStub),           LvlCmdSetTerrain,       (LvlCmdStub),
     LvlCmdShowDialog,       LvlCmdSetTerrainType,   (LvlCmdStub),           (LvlCmdStub),
     (LvlCmdStub),           (LvlCmdStub),           LvlCmdSetMusic,         (LvlCmdStub),
-    (LvlCmdStub),           (LvlCmdStub),           (LvlCmdStub),           (LvlCmdStub),
+    (LvlCmdStub),           LvlCmdMacroObjects,     (LvlCmdStub),           (LvlCmdStub),
     (LvlCmdStub),
 };
 
@@ -823,6 +843,7 @@ void ExportAreas(N64Rom &Rom, LevelScript &Script, const std::string &LvlName) {
     for (auto &I : Script.Areas) {
         u32 GeoSegAddr = Script.AreaDatas[I].GeoLayout;
         u32 ColSegAddr = Script.AreaDatas[I].Collision;
+        u32 MacroSegAddr = Script.AreaDatas[I].MacroObjects;
 
         Script.SetAreaSegmented0x0E(Rom, I);
 
@@ -831,13 +852,15 @@ void ExportAreas(N64Rom &Rom, LevelScript &Script, const std::string &LvlName) {
         std::string GeoDumpPath = AreaStrNum + "/geo.inc.c";
         ExportGeolayout(Rom, I, LvlName, GeoSegAddr, GeoSegAddr, Script, GeoDumpPath.c_str());
         std::string ColDumpPath = AreaStrNum + "/collision.inc.c";
-        ExportCollision(Rom, I, LvlName, ColSegAddr, ColSegAddr, Script, ColDumpPath.c_str());
+        ExportCollision(Rom, I, LvlName, ColSegAddr, Script, ColDumpPath.c_str());
         if (GameType == GT_ROM_MANAGER || GameType == GT_EDITOR) {
             std::string MovTextDumpPath = AreaStrNum + "/movtext.inc.c";
             ExportMovTex(Rom, I, LvlName, Script, MovTextDumpPath.c_str());
         }
         std::string ModelDumpPath = AreaStrNum + "/model.inc.c";
         ExportModels(Rom, Script, LvlName, I, ModelDumpPath.c_str());
+        std::string MacroDumpPath = AreaStrNum + "/macro.inc.c";
+        ExportMacroObjects(Rom, I, LvlName, MacroSegAddr, Script, MacroDumpPath.c_str());
 
         printf("%s Area %u done\n", LvlName.c_str(), I);
     }

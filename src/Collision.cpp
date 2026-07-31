@@ -1,7 +1,6 @@
 #include "Collision.h"
 
-void ExportCollision(N64Rom &Rom, u8 Area, const std::string &LvlName, u32 SegAddr, u32 &Entry, LevelScript &Script, const char *FilePath) {
-    Entry = (SegAddr);
+void ExportCollision(N64Rom &Rom, u8 Area, const std::string &LvlName, u32 Entry, LevelScript &Script, const char *FilePath) {
     FILE *ColDump = fopen(FilePath, "w");
     fprintf(ColDump, "const Collision %s_area_%u_collision[] = {\n", LvlName.c_str(), Area);
     fprintf(ColDump, "    COL_INIT(),\n");
