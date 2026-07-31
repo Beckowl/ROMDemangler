@@ -75,7 +75,7 @@ bool ValidateMemAddr(u32 Address) {
     return true;
 }
 
-u32  SegmentedToROM(u32 Addr) {
+u32 SegmentedToROM(u32 Addr) {
     u8 Bank = Addr >> 24;
     u32 Offset = Addr & 0xFFFFFF;
     u32 Start = SegmentOffsets[Bank][0];

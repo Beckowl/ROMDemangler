@@ -159,7 +159,7 @@ void GetSequenceNames(N64Rom &Rom) {
     }
 }
 
-u8 GetSeqNLST(N64Rom &Rom, u8 SeqID) {
+u8 GetSeqNInst(N64Rom &Rom, u8 SeqID) {
     u32 SeqMagic = (GameType == GT_DECOMP) ? 0x7b0800 : 0x7f0000;
 
     u32 Entry = SeqMagic + SeqID * 2;

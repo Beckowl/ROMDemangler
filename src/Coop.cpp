@@ -27,9 +27,9 @@ void ExportLua(N64Rom &Rom) {
         for (const auto &Music : SequenceMusics) {
             if (UseNames) {
                 std::string Name = SequenceNames[Music];
-                fprintf(LuaDump, "smlua_audio_utils_replace_sequence(0x%02x, 0x%02x, %u, \"%s\")\n", Music, GetSeqNLST(Rom, Music), 80, Name.c_str());
+                fprintf(LuaDump, "smlua_audio_utils_replace_sequence(0x%02x, 0x%02x, %u, \"%s\")\n", Music, GetSeqNInst(Rom, Music), 80, Name.c_str());
             } else {
-                fprintf(LuaDump, "smlua_audio_utils_replace_sequence(0x%02x, 0x%02x, %u, \"seq_0x%02x\")\n", Music, GetSeqNLST(Rom, Music), 80, Music);
+                fprintf(LuaDump, "smlua_audio_utils_replace_sequence(0x%02x, 0x%02x, %u, \"seq_0x%02x\")\n", Music, GetSeqNInst(Rom, Music), 80, Music);
             }
         }
     }

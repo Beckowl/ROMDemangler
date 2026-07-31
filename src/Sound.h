@@ -7,4 +7,4 @@ extern std::vector<std::string> SequenceNames;
 
 extern void ExportSequences(N64Rom &Rom);
 extern void GetSequenceNames(N64Rom &Rom);
-extern u8 GetSeqNLST(N64Rom &Rom, u8 SeqID);
+extern u8 GetSeqNInst(N64Rom &Rom, u8 SeqID);
