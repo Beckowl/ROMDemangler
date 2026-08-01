@@ -26,10 +26,10 @@ void ExportCollision(N64Rom &Rom, u8 Area, const std::string &LvlName, u32 Entry
     while (true) {
         s16 SurfType = Rom.ReadBytes<s16>(Entry + XOffset + 0);
         s16 NumTris = Rom.ReadBytes<s16>(Entry + XOffset + 2);
-        if (SurfType == 0x41 || Guard > 20000) {
+        if (SurfType == 0x41 || Guard > 50000) {
             fprintf(ColDump, "    COL_TRI_STOP(),\n");
             if (Guard > 50000) {
-                printf("Level has broken collision data, stopping collision export");
+                printf("Level has broken collision data, stopping collision export\n");
             }
             break;
         }
@@ -62,9 +62,9 @@ void ExportCollision(N64Rom &Rom, u8 Area, const std::string &LvlName, u32 Entry
     while (true) {
         s16 SpecialType = Rom.ReadBytes<s16>(Entry + XOffset + 0);
         s16 Stuff = Rom.ReadBytes<s16>(Entry + XOffset + 2);
-        if (SpecialType == 0x42 || Guard > 20000) {
+        if (SpecialType == 0x42 || Guard > 50000) {
             if (Guard > 50000) {
-                printf("Level has broken collision data, stopping collision export");
+                printf("Level has broken collision data, stopping collision export\n");
             }
             fprintf(ColDump, "    COL_END(),\n");
             break;

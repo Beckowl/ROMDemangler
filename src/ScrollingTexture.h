@@ -1,8 +1,6 @@
 #pragma once
 
-#include <ultratypes.h>
-#include <string>
-#include <vector>
+#include "LevelScript.h"
 
 struct ScrollTexture {
     std::string LvlName;
@@ -20,4 +18,5 @@ extern std::vector<ScrollTexture> ScrollingTextures;
 
 extern u16 GetScrollAxis(u16 Dir);
 extern u16 GetScrollType(u16 Dir);
-extern ScrollTexture ConvertTexScrolls(u32 Bparam, u16 NumVtx, u16 Dir, s16 Speed);
+extern ScrollTexture ConvertRMTexScrolls(u32 Bparam, u16 NumVtx, u16 Dir, s16 Speed);
+extern ScrollTexture ConvertEditorTexScrolls(u32 Bparam, s16 PosX, s16 PosY, s16 PosZ, std::string &BhvName, N64Rom& Rom);

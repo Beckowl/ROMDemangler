@@ -2,14 +2,19 @@
 
 std::vector<ScrollTexture> ScrollingTextures = {};
 
+u8 GetPosByte(f32 Val) {
+    u32 Bits = std::bit_cast<u32>(Val);
+    return (Bits >> 16) & 0xFF;
+}
+
 u16 GetScrollAxis(u16 Dir) {
     u16 V = Dir & 0xF000;
     switch (V) {
-        case 0xA000: return 4;
-        case 0x8000: return 5;
-        case 0x4000: return 0;
-        case 0x2000: return 1;
-        case 0x0000: return 2;
+        case 0xA000: return 4; // x
+        case 0x8000: return 5; // y
+        case 0x4000: return 0; // xpos
+        case 0x2000: return 1; // ypos
+        case 0x0000: return 2; // zpos
         default: return 4;
     }
 }
@@ -17,20 +22,54 @@ u16 GetScrollAxis(u16 Dir) {
 u16 GetScrollType(u16 Dir) {
     u16 V = Dir & 0x0F00;
     switch (V) {
-        case 0x000: return 0;
-        case 0x100: return 1;
-        case 0x200: return 2;
+        case 0x000: return 0; // normal
+        case 0x100: return 1; // sine
+        case 0x200: return 2; // jump
         default: return 0;
     }
 }
 
-ScrollTexture ConvertTexScrolls(u32 Bparam, u16 NumVtx, u16 Dir, s16 Speed) {
+bool UsesNewEditorScroll(N64Rom &Rom) {
+    u32 Val = Rom.ReadBytesPhysical<u32>(0x1202400);
+    return Val != 0x27bdffe8;
+}
+
+ScrollTexture ConvertRMTexScrolls(u32 Bparam, u16 NumVtx, u16 Dir, s16 Speed) {
     ScrollTexture S;
     S.Addr = Bparam;
     S.NumVtx = NumVtx;
     S.Speed = Speed;
     S.Axis = GetScrollAxis(Dir);
     S.Type = GetScrollType(Dir);
-    S.Cycle = Dir&0xFF;
+    S.Cycle = Dir & 0xFF;
+    return S;
+}
+
+// this is the second most depressing function i have ever wrote
+ScrollTexture ConvertEditorTexScrolls(u32 Bparam, s16 PosX, s16 PosY, s16 PosZ, std::string &BhvName, N64Rom& Rom) {
+    ScrollTexture S;
+    
+    u32 Addr = 0x0E000000 + ((GetPosByte(PosX) - 2) << 16) + (Bparam >> 16);
+    u32 Dir = Addr & 0xF;
+
+    if (BhvName != "editor_Scroll_Texture2" && UsesNewEditorScroll(Rom)) {
+        S.NumVtx = Bparam & 0xFFFF;
+    } else {
+        if (BhvName == "editor_Scroll_Texture2") {
+            BhvName = "editor_Scroll_Texture";
+        }
+        if (PosY != 0) {
+            S.NumVtx = GetPosByte(PosY) * 3;
+        } else {
+            S.NumVtx = 0;
+        }
+    }
+
+    S.Addr = Addr & 0xFFFFFFF0;
+    S.Speed = GetPosByte(PosZ);
+    S.Axis = (Dir == 0x8) ? 4 : 5;
+    S.Type = 0;
+    S.Cycle = 0;
+
     return S;
 }

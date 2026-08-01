@@ -593,16 +593,17 @@ std::string LvlCmdPlaceObject(N64Rom &Rom, LevelScript &Script, u32 &Start) {
 
     std::string BhvName = GetLabelFromMap(Bhv);
     if (GameType == GT_ROM_MANAGER || GameType == GT_EDITOR) {
-        if (BhvName == "editor_Scroll_Texture2") {
-            BhvName = "editor_Scroll_Texture";
-        }
+        if (BhvName == "RM_Scroll_Texture" || BhvName == "editor_Scroll_Texture" || BhvName == "editor_Scroll_Texture2" || (BhvName == "bhvBetaHoldableObject" && GameType == GT_EDITOR)) {
+            ScrollTexture Scroll;
 
-        if (BhvName == "RM_Scroll_Texture" || BhvName == "editor_Scroll_Texture") {
-            u16 NumVerts = PosX;
-            u16 Dir = PosY;
-            s16 Speed = PosZ;
+            if (BhvName == "bhvBetaHoldableObject") BhvName = "editor_Scroll_Texture2";
+            
+            if (BhvName == "RM_Scroll_Texture") {
+                Scroll = ConvertRMTexScrolls(BhvParam, PosX, PosY, PosZ);
+            } else {
+                Scroll = ConvertEditorTexScrolls(BhvParam, PosX, PosY, PosZ, BhvName, Rom);
+            }
 
-            ScrollTexture Scroll = ConvertTexScrolls(BhvParam, NumVerts, Dir, Speed);
             Scroll.LvlName = Script.Name;
             Scroll.Area = Script.CurrArea;
             Scroll.Index = ScrollingTextures.size();
