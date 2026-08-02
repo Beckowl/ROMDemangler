@@ -4,7 +4,7 @@ A tool in made in C++ that allows you to export data from SM64 ROMs to a sm64coo
 Credits:
 - [stb_image_write](https://github.com/nothings/stb/blob/master/stb_image_write.h) by [nothings](https://github.com/nothings) - Used for exporting textures
 - [cxxopts](https://github.com/jarro2783/cxxopts) by [jarro2783](https://github.com/jarro2783) - Library for parsing CLI arguments
-- [RM2C](https://gitlab.com/scuttlebugraiser/rom-manger-2-c) by [scuttlebugraiser](https://gitlab.com/scuttlebugraiser) - References for Movtex and Scrolling Texture exporting
+- [RM2C](https://gitlab.com/scuttlebugraiser/rom-manger-2-c) by [scuttlebugraiser](https://gitlab.com/scuttlebugraiser) - References for Scrolling Textures and Collision fixes
 - [Quad64](https://github.com/DavidSM64/Quad64) by [DavidSM64](https://github.com/DavidSM64) - Per-area bank 0x0E functions
 
 Features:

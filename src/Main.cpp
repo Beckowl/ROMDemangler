@@ -9,6 +9,7 @@ bool VerbosePrinting = false;
 std::string ActorsExport = "none";
 bool SoundExport = false;
 bool TweakExport = false;
+bool CollisionFix = false;
 enum SM64GameType GameType = GT_UNKNOWN;
 u32 FoundScriptEntry = 0;
 bool ExportSegment0 = false;
@@ -154,6 +155,7 @@ int main(int argc, char** argv) {
         ("sound", "Export Sound data", cxxopts::value<bool>())
         ("tweaks", "Export Tweaks", cxxopts::value<bool>())
         ("ram", "The File/Memory to get Segment 0 from", cxxopts::value<std::string>())
+        ("fix-collision", "Fix collision geometry", cxxopts::value<bool>())
         ("verbose", "Print more info", cxxopts::value<bool>())
         ("ignore-seg-0", "Don't export stuff from Segment 0", cxxopts::value<bool>())
         ("h,help", "Print usage");
@@ -163,6 +165,7 @@ int main(int argc, char** argv) {
     TweakExport = Result["tweaks"].as<bool>();
     VerbosePrinting = Result["verbose"].as<bool>();
     IgnoreSegment0 = Result["ignore-seg-0"].as<bool>();
+    CollisionFix = Result["fix-collision"].as<bool>();
     std::string RAMPath;
     if (Result.count("actors")) ActorsExport = Result["actors"].as<std::string>();
     if (Result.count("ram")) {

@@ -12,4 +12,5 @@ extern bool TweakExport;
 extern bool VerbosePrinting;
 extern u32 FoundScriptEntry;
 extern bool IgnoreSegment0;
+extern bool CollisionFix;
 extern std::string ActorsExport;
