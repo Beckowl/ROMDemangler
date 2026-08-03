@@ -394,7 +394,7 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList, std::vector<F3DVert
     }
 }
 
-const std::vector<std::pair<uint32_t, std::string>> GeoMacrosF3D = {
+const std::vector<std::pair<u32, std::string>> GeoMacrosF3D = {
     {8192, "G_CULL_BACK"},
     {12288, "G_CULL_BOTH"},
     {4096, "G_CULL_FRONT"},
@@ -407,7 +407,7 @@ const std::vector<std::pair<uint32_t, std::string>> GeoMacrosF3D = {
     {1, "G_ZBUFFER"}
 };
 
-const std::vector<std::pair<uint32_t, std::string>> GeoMacrosF3DEX2 = {
+const std::vector<std::pair<u32, std::string>> GeoMacrosF3DEX2 = {
     {1024, "G_CULL_BACK"},
     {1536, "G_CULL_BOTH"},
     {512, "G_CULL_FRONT"},
@@ -420,18 +420,18 @@ const std::vector<std::pair<uint32_t, std::string>> GeoMacrosF3DEX2 = {
     {1, "G_ZBUFFER"}
 };
 
-std::string ConvertGeoMode(N64Rom &Rom, uint32_t Flags) {
+std::string ConvertGeoMode(N64Rom &Rom, u32 Flags) {
     std::string Result = "";
     
-    std::vector<std::pair<uint32_t, std::string>> macros = GeoMacrosF3D;
+    std::vector<std::pair<u32, std::string>> Macros = GeoMacrosF3D;
 
     if (Rom.Microcode == UCODE_F3DEX2) {
-        macros = GeoMacrosF3DEX2;
+        Macros = GeoMacrosF3DEX2;
     }
 
-    for (const auto &macro : macros) {
-        uint32_t K = macro.first;
-        const std::string &V = macro.second;
+    for (const auto &Macro : Macros) {
+        u32 K = Macro.first;
+        const std::string &V = Macro.second;
         
         if ((Flags & K) == K) {
             Flags = Flags ^ K;

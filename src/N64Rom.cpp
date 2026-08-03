@@ -102,6 +102,7 @@ void N64Rom::OpenFile(const char *Path, const char *RAMPath) {
         Microcode = UCODE_F3D;
     }
 
+    printf("ROM Name: %s\n", ROMInternalName.c_str());
     printf("Microcode Details:\n");
     printf("  Signature: %s\n", FoundUCode.c_str());
     printf("  Name: %s\n", UCodeSigToName[Microcode].c_str());

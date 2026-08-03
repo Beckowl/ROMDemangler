@@ -9,6 +9,273 @@
 #include "MacroObject.h"
 #include "Memory.h"
 
+namespace ActorGroup {
+
+    using GroupMap = std::unordered_map<u32, std::string>;
+
+    const std::unordered_map<std::string, GroupMap> AllGroups = {
+        {"common0", {
+            {0x0f000000, "blue_coin_switch_geo"},
+            {0x0f000028, "amp_geo"},
+            {0x0f0004cc, "purple_switch_geo"},
+            {0x0f0004e4, "checkerboard_platform_geo"},
+            {0x0f0005d0, "breakable_box_geo"},
+            {0x0f000610, "breakable_box_small_geo"},
+            {0x0f000a58, "exclamation_box_outline_geo"},
+            {0x0f000694, "exclamation_box_geo"},
+            {0x0f0006e4, "goomba_geo"},
+            {0x08025f08, "exclamation_box_outline_seg8_dl_08025F08"},
+            {0x0f000ab0, "koopa_shell_geo"},
+            {0x0f000a30, "metal_box_geo"},
+            {0x08024bb8, "metal_box_dl"},
+            {0x0f0007b8, "black_bobomb_geo"},
+            {0x0f0008f4, "bobomb_buddy_geo"},
+            {0x080048e0, "cannon_lid_seg8_dl_080048E0"},
+            {0x0f000640, "bowling_ball_geo"},
+            {0x0f0001c0, "cannon_barrel_geo"},
+            {0x0f0001a8, "cannon_base_geo"},
+            {0x0f0004fc, "heart_geo"},
+            {0x0f000518, "flyguy_geo"},
+            {0x0f0001d8, "chuckya_geo"},
+            {0x0f00066c, "bowling_ball_track_geo"}
+        }},
+        {"common1", {
+            {0x160007b4, "castle_door_0_star_geo"},
+            {0x16000868, "castle_door_1_star_geo"},
+            {0x1600091c, "castle_door_3_stars_geo"},
+            {0x160009d0, "key_door_geo"},
+            {0x16000720, "haunted_door_geo"},
+            {0x1600043c, "cabin_door_geo"},
+            {0x160004d0, "wooden_door_geo"},
+            {0x160005f8, "metal_door_geo"},
+            {0x1600068c, "hazy_maze_door_geo"},
+            {0x16001048, "palm_tree_geo"},
+            {0x16001018, "snow_tree_geo"},
+            {0x16000388, "warp_pipe_geo"},
+            {0x16001000, "spiky_tree_geo"},
+            {0x16000fe8, "bubbly_tree_geo"},
+            {0x160003a8, "castle_door_geo"},
+            {0x1600013c, "yellow_coin_geo"},
+            {0x16000ea0, "star_geo"},
+            {0x16000f6c, "transparent_star_geo"},
+            {0x16000fb4, "wooden_signpost_geo"},
+            {0x16000b2c, "red_flame_geo"},
+            {0x16000b8c, "blue_flame_geo"},
+            {0x16000c8c, "leaves_geo"},
+            {0x16000c44, "fish_geo"},
+            {0x16000bec, "fish_shadow_geo"},
+            {0x0302bcd0, "sand_seg3_dl_0302BCD0"},
+            {0x160000a8, "butterfly_geo"},
+            {0x0301cb00, "pebble_seg3_dl_0301CB00"},
+            {0x16000000, "mist_geo"},
+            {0x16000020, "white_puff_geo"},
+            {0x0302c8a0, "white_particle_dl"},
+            {0x16000f98, "white_particle_geo"},
+            {0x160001a0, "yellow_coin_no_shadow_geo"},
+            {0x16000200, "blue_coin_geo"},
+            {0x16000264, "blue_coin_no_shadow_geo"},
+            {0x16000da8, "marios_winged_metal_cap_geo"},
+            {0x16000cf0, "marios_metal_cap_geo"},
+            {0x16000d3c, "marios_wing_cap_geo"},
+            {0x16000ca4, "marios_cap_geo"},
+            {0x16000ab0, "bowser_key_cutscene_geo"},
+            {0x16000a84, "bowser_key_geo"},
+            {0x16000b10, "red_flame_shadow_geo"},
+            {0x16000e84, "mushroom_1up_geo"},
+            {0x160002c4, "red_coin_geo"},
+            {0x16000328, "red_coin_no_shadow_geo"},
+            {0x16000e14, "number_geo"},
+            {0x16000040, "explosion_geo"},
+            {0x16000ed4, "dirt_animation_geo"},
+            {0x16000f24, "cartoon_star_geo"}
+        }},
+        {"group0", {
+            {0x17000284, "sparkles_animation_geo"},
+            {0x1700001c, "purple_marble_geo"},
+            {0x17000084, "burn_smoke_geo"},
+            {0x04032a18, "white_particle_small_dl"},
+            {0x17002dd4, "mario_geo"},
+            {0x17000038, "smoke_geo"},
+            {0x170001bc, "sparkles_geo"},
+            {0x17000000, "bubble_geo"},
+            {0x1700009c, "small_water_splash_geo"},
+            {0x17000124, "idle_water_wave_geo"},
+            {0x17000230, "water_splash_geo"},
+            {0x17000168, "wave_trail_geo"}
+        }},
+        {"group1", {
+            {0x0c000264, "bullet_bill_geo"},
+            {0x0c000000, "yellow_sphere_geo"},
+            {0x0c000018, "hoot_geo"},
+            {0x0c0001e4, "yoshi_egg_geo"},
+            {0x0c000248, "thwomp_geo"},
+            {0x0c00028c, "heave_ho_geo"}
+        }},
+        {"group10", {
+            {0x0c000000, "birds_geo"},
+            {0x0c000098, "peach_geo"},
+            {0x0c000468, "yoshi_geo"}
+        }},
+        {"group11", {
+            {0x0c0001bc, "enemy_lakitu_geo"},
+            {0x0c000290, "spiny_ball_geo"},
+            {0x0c000328, "spiny_geo"},
+            {0x0c000030, "wiggler_head_geo"},
+            {0x0500C778, "wiggler_body_geo"},
+            {0x0c000000, "bubba_geo"}
+        }},
+        {"group12", {
+            {0x0d000ac4, "bowser_geo"},
+            {0x0d000bbc, "bowser_bomb_geo"},
+            {0x0d000bfc, "bowser_impact_smoke_geo"},
+            {0x0d000000, "bowser_flames_geo"},
+            {0x0d000090, "invisible_bowser_accessory_geo"},
+            {0x0d000b40, "bowser2_geo"}
+        }},
+        {"group13", {
+            {0x0d00038c, "bub_geo"},
+            {0x0d000450, "treasure_chest_base_geo"},
+            {0x0d000468, "treasure_chest_lid_geo"},
+            {0x0d000324, "cyan_fish_geo"},
+            {0x0d000414, "water_ring_geo"},
+            {0x0d0002f4, "water_mine_geo"},
+            {0x0d000284, "seaweed_geo"},
+            {0x0d000000, "skeeter_geo"}
+        }},
+        {"group14", {
+            {0x0d000358, "piranha_plant_geo"},
+            {0x0d000480, "whomp_geo"},
+            {0x0d000214, "koopa_with_shell_geo"},
+            {0x0d0000d0, "koopa_without_shell_geo"},
+            {0x0d0005d0, "metallic_ball_geo"},
+            {0x0d0005ec, "chain_chomp_geo"},
+            {0x0d000000, "koopa_flag_geo"},
+            {0x0d0000b8, "wooden_post_geo"}
+        }},
+        {"group15", {
+            {0x0d000448, "mips_geo"},
+            {0x0d0005b0, "boo_castle_geo"},
+            {0x0d000000, "lakitu_geo"},
+            {0x0d0003e4, "toad_geo"}
+        }},
+        {"group16", {
+            {0x06003754, "chilly_chief_geo"},
+            {0x06003874, "chilly_chief_big_geo"},
+            {0x0D0000F0, "moneybag_geo"}
+        }},
+        {"group17", {
+            {0x0d0000dc, "swoop_geo"},
+            {0x0d000394, "scuttlebug_geo"},
+            {0x0d00001c, "mr_i_iris_geo"},
+            {0x0d000000, "mr_i_geo"},
+            {0x0d000230, "dorrie_geo"},
+            {0x0d0001a0, "snufit_geo"}
+        }},
+        {"group2", {
+            {0x0c000240, "blargg_geo"},
+            {0x0c000000, "bully_geo"},
+            {0x0c000120, "bully_boss_geo"}
+        }},
+        {"group3", {
+            {0x0c000308, "water_bomb_geo"},
+            {0x0c000328, "water_bomb_shadow_geo"},
+            {0x0c000000, "king_bobomb_geo"}
+        }},
+        {"group4", {
+            {0x05008D14, "manta_seg5_geo_05008D14"},
+            {0x0c00010c, "unagi_geo"},
+            {0x0c000068, "sushi_geo"},
+            {0x05013CB8, "whirlpool_seg5_dl_05013CB8"},
+            {0x0c000000, "clam_shell_geo"}
+        }},
+        {"group5", {
+            {0x0c000610, "pokey_head_geo"},
+            {0x0c000644, "pokey_body_part_geo"},
+            {0x05014630, "tweester_geo"},
+            {0x0c000000, "klepto_geo"},
+            {0x0c0005a8, "eyerok_left_hand_geo"},
+            {0x0c0005e4, "eyerok_right_hand_geo"}
+        }},
+        {"group6", {
+            {0x05000840, "monty_mole_hole_seg5_dl_05000840"},
+            {0x0c000000, "monty_mole_geo"},
+            {0x0c000110, "ukiki_geo"},
+            {0x0c00036c, "fwoosh_geo"}
+        }},
+        {"group7", {
+            {0x0c000000, "spindrift_geo"},
+            {0x0c00021c, "mr_blizzard_hidden_geo"},
+            {0x0c000348, "mr_blizzard_geo"},
+            {0x0c000104, "penguin_geo"}
+        }},
+        {"group8", {
+            {0x05002E00, "cap_switch_exclamation_seg5_dl_05002E00"},
+            {0x0c000048, "cap_switch_geo"},
+            {0x0c000030, "springboard_bottom_geo"},
+            {0x05003120, "cap_switch_base_seg5_dl_05003120"}
+        }},
+        {"group9", {
+            {0x0c000224, "boo_geo"},
+            {0x0c000188, "small_key_geo"},
+            {0x0c0000d8, "haunted_chair_geo"},
+            {0x0c0001b4, "mad_piano_geo"},
+            {0x0c000000, "bookend_part_geo"},
+            {0x0c0000c0, "bookend_geo"},
+            {0x0c000274, "haunted_cage_geo"}
+        }}
+    };
+
+    std::unordered_map<u32, std::string> GroupAddreses = {
+        {0x1279B0, "group0"},
+        {0x132850, "group1"},
+        {0x134a70, "group2"},
+        {0x13B5D0, "group3"},
+        {0x145C10, "group4"},
+        {0x151B70, "group5"},
+        {0x1602E0, "group6"},
+        {0x1656E0, "group7"},
+        {0x166BD0, "group8"},
+        {0x16D5C0, "group9"},
+        {0x180540, "group10"},
+        {0x187FA0, "group11"},
+        {0x1B9070, "group12"},
+        {0x1C3DB0, "group13"},
+        {0x1D7C90, "group14"},
+        {0x1E4BF0, "group15"},
+        {0x1E7D90, "group16"},
+        {0x1F1B30, "group17"},
+        {0x2008D0, "group18"},
+        {0x218DA0, "group19"}
+    };
+
+    std::string GetGeoName(const std::string &GroupName, u32 Addr) {
+        auto GrouptIt = AllGroups.find(GroupName);
+        if (GrouptIt == AllGroups.end()) {
+            return "";
+        }
+        auto ModelIt = GrouptIt->second.find(Addr);
+        if (ModelIt == GrouptIt->second.end()) {
+            return "";
+        }
+        return ModelIt->second;
+    }
+
+    std::string FindNearestGroup(u32 Addr) {
+        std::string NearestGroup = "";
+        u32 Min = UINT32_MAX;
+
+        for (const auto &[MapAddr, GroupName] : GroupAddreses) {
+            u32 Dist = (Addr > MapAddr) ? (Addr - MapAddr) : (MapAddr - Addr);
+            if (Dist < Min) {
+                Min = Dist;
+                NearestGroup = GroupName;
+            }
+        }
+
+        return NearestGroup;
+    }
+}
+
 std::map<u8, std::string> LevelNames = {
     {4, "bbh"},
     {5, "ccm"},
@@ -540,7 +807,15 @@ std::string LvlCmdLoadModelFromGeo(N64Rom &Rom, LevelScript &Script, u32 &Start)
     s16 ModelID = Rom.ReadBytes<s16>(Start + 2, false);
     u32 Geo = Rom.ReadBytes<u32>(Start + 4, false);
 
+    u8 GeoBank = Geo >> 24;
     std::string GeoName = GetLabelFromMap(Geo);
+    std::string Group = ActorGroup::FindNearestGroup(SegmentOffsets[GeoBank][0]);
+    const std::string BuiltinName = ActorGroup::GetGeoName(Group, Geo);
+
+    if (!GeoName.starts_with("Custom_") && BuiltinName != "" && (GeoBank == 0x0D || GeoBank == 0x0C) &&
+        (GameType == GT_ROM_MANAGER || GameType == GT_EDITOR)) {
+        GeoName = BuiltinName;
+    }
 
     if (Geo) {
         Actor NewActor;
