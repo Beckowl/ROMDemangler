@@ -10,7 +10,6 @@
 #include "Memory.h"
 
 namespace ActorGroup {
-
     using GroupMap = std::unordered_map<u32, std::string>;
 
     const std::unordered_map<std::string, GroupMap> AllGroups = {

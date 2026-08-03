@@ -58,7 +58,7 @@ void ExportLua(N64Rom &Rom) {
         fprintf(LuaDump, "\n-- Audio\n");
         bool UseNames = !SequenceNames.empty();
         for (const auto &Music : SequenceMusics) {
-            if (UseNames) {
+            if (UseNames && Music < SequenceNames.size()) {
                 std::string Name = SequenceNames[Music];
                 fprintf(LuaDump, "smlua_audio_utils_replace_sequence(0x%02x, 0x%02x, %u, \"%s\")\n", Music, GetSeqNInst(Rom, Music), 80, Name.c_str());
             } else {
