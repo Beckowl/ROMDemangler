@@ -20,7 +20,7 @@
 #ifndef _GBI_H_
 #define _GBI_H_
 
-#include <ultratypes.h>
+#include "ultratypes.h"
 
 /*
  * To use the F3DEX ucodes, define F3DEX_GBI before include this file.

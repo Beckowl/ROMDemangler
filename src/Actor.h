@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ultratypes.h>
+#include "ultratypes.h"
 #include <string>
 #include <vector>
 #include "N64Rom.h"

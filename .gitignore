@@ -5,3 +5,5 @@
 *.lua
 build/
 .vscode/
+# clangd stuff
+compile_commands.json

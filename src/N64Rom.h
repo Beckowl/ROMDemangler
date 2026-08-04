@@ -34,7 +34,7 @@ extern u32 SegmentOffsets[MAX_SEGMENT][2];
 class N64Rom {
 public:
     FILE *File;
-    s32 Size = 0;
+    size_t Size = 0;
     u8 *Data = nullptr;
     u8 *RAM = nullptr;
     std::string ROMInternalName;
