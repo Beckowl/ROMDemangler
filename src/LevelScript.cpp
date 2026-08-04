@@ -1066,6 +1066,22 @@ std::string LvlCmdSetMusic(N64Rom &Rom, LevelScript &Script, u32 &Start) {
     return OutArgs;
 };
 
+std::string LvlCmdStopMusic(N64Rom &Rom, LevelScript &Script, u32 &Start) {
+    /*
+    #define STOP_MUSIC(fadeOutTime) \
+    CMD_BBH(0x38, 0x04, fadeOutTime)
+    */
+
+    s16 FadeOutTime = Rom.ReadBytes<s16>(Start + 2, false);
+
+    std::string OutArgs = std::format(
+        "{:#x}",
+        FadeOutTime
+    );
+
+    return OutArgs;
+};
+
 std::string LvlCmdMacroObjects(N64Rom &Rom, LevelScript &Script, u32 &Start) {
     /*
     #define MACRO_OBJECTS(objList) \
@@ -1104,7 +1120,7 @@ std::string (*LvlCommandsFunctions[])(N64Rom &Rom, LevelScript &Script, u32 &Sta
     (LvlCmdStub),           (LvlCmdStub),           LvlCmdSetTerrain,       (LvlCmdStub),
     LvlCmdShowDialog,       LvlCmdSetTerrainType,   (LvlCmdStub),           (LvlCmdStub),
     (LvlCmdStub),           (LvlCmdStub),           LvlCmdSetMusic,         (LvlCmdStub),
-    (LvlCmdStub),           LvlCmdMacroObjects,     (LvlCmdStub),           (LvlCmdStub),
+    LvlCmdStopMusic,        LvlCmdMacroObjects,     (LvlCmdStub),           (LvlCmdStub),
     (LvlCmdStub),
 };
 

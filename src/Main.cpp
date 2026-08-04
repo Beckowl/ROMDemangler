@@ -260,7 +260,7 @@ int main(int argc, char** argv) {
             GameTypeStr += "Decomp";
         }
     }
-    printf((GameTypeStr + "\n").c_str());
+    printf("%s", (GameTypeStr + "\n").c_str());
 
     std::error_code ErrCode;
     if (fs::exists("output")) fs::remove_all("output", ErrCode);
