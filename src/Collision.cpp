@@ -14,6 +14,8 @@ struct FloatVertex3D {
     f32 X, Y, Z;
 };
 
+bool ColsHaveExtraForce = false;
+
 f32 CalculateTriangleArea(const FloatVertex3D &V1, const FloatVertex3D &V2, const FloatVertex3D &V3) {
     auto Distance = [](const FloatVertex3D &A, const FloatVertex3D &B) {
         f32 Dx = B.X - A.X;
@@ -30,6 +32,7 @@ f32 CalculateTriangleArea(const FloatVertex3D &V1, const FloatVertex3D &V2, cons
 }
 
 void ExportCollision(N64Rom &Rom, u8 Area, const std::string &LvlName, u32 Entry, LevelScript &Script, const char *FilePath) {
+Retry:
     FILE *ColDump = fopen(FilePath, "w");
     fprintf(ColDump, "const Collision %s_area_%u_collision[] = {\n", LvlName.c_str(), Area);
     fprintf(ColDump, "    COL_INIT(),\n");
@@ -60,7 +63,12 @@ void ExportCollision(N64Rom &Rom, u8 Area, const std::string &LvlName, u32 Entry
         s16 NumTris = Rom.ReadBytes<s16>(Entry + XOffset + 2);
         if (SurfType == 0x41 || Guard > 50000) {
             if (Guard > 50000) {
-                printf("Level has broken collision data, stopping collision export\n");
+                if (!ColsHaveExtraForce) {
+                    printf("Level has broken collision data, retrying with extra fields\n");
+                    ColsHaveExtraForce = true;
+                    fclose(ColDump);
+                    goto Retry;
+                }
             }
             break;
         }
@@ -69,7 +77,7 @@ void ExportCollision(N64Rom &Rom, u8 Area, const std::string &LvlName, u32 Entry
             SurfaceTris[SurfType] = std::vector<std::vector<s16>>();
         }
 
-        if (SpecialTris.count(SurfType)) {
+        if (SpecialTris.count(SurfType) || ColsHaveExtraForce) {
             for (s32 T = 0; T < NumTris; T++) {
                 s16 V1 = Rom.ReadBytes<s16>(Entry + XOffset + 4 + T * 8 + 0);
                 s16 V2 = Rom.ReadBytes<s16>(Entry + XOffset + 4 + T * 8 + 2);
