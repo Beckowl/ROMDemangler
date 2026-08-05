@@ -94,11 +94,11 @@ std::vector<u8> DecompressSegment(N64Rom &Rom, u8 Segment, u32 RomStart, u32 Rom
     };
 
     if (HeaderMagic[0] == 'M' && HeaderMagic[1] == 'I' && HeaderMagic[2] == 'O' && HeaderMagic[3] == '0') {
-        return DecompressMIO0(Rom, RomStart);
+        return Compression::DecompressMIO0(Rom, RomStart);
     } else if (HeaderMagic[0] == 'R' && HeaderMagic[1] == 'N' && HeaderMagic[2] == 'C') {
-        return DecompressRNC(Rom, RomStart);
+        return Compression::DecompressRNC(Rom, RomStart);
     } else if (HeaderMagic[0] == 'Y' && HeaderMagic[1] == 'A' && HeaderMagic[2] == 'Y' && HeaderMagic[3] == '0') {
-        return DecompressYAY0(Rom, RomStart);
+        return Compression::DecompressYAY0(Rom, RomStart);
     } else {
         printf("Tried to decompress segment 0x%02x which is not compressed\n", Segment);
         u32 Size = RomEnd - RomStart;

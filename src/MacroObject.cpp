@@ -369,7 +369,7 @@ std::string MacroPresetNames[] = {
 	"macro_empty_365"
 };
 
-void ExportMacroObjects(N64Rom &Rom, u8 Area, const std::string &LvlName, u32 Entry, LevelScript &Script, const char *FilePath) {
+void ExportMacroObjects(N64Rom &Rom, u8 Area, const std::string &LvlName, u32 Entry, const char *FilePath) {
     if (!Entry) return;
     FILE *MacroObjectDump = fopen(FilePath, "w");
     

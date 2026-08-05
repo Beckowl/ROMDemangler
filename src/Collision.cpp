@@ -14,7 +14,7 @@ struct FloatVertex3D {
     f32 X, Y, Z;
 };
 
-bool ColsHaveExtraForce = false;
+static bool ColsHaveExtraForce = false;
 
 f32 CalculateTriangleArea(const FloatVertex3D &V1, const FloatVertex3D &V2, const FloatVertex3D &V3) {
     auto Distance = [](const FloatVertex3D &A, const FloatVertex3D &B) {

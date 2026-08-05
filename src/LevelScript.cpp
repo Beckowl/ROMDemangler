@@ -1151,7 +1151,7 @@ void ExportAreas(N64Rom &Rom, LevelScript &Script, const std::string &LvlName) {
         std::string ModelDumpPath = AreaStrNum + "/model.inc.c";
         ExportModels(Rom, Script, LvlName, I, ModelDumpPath.c_str());
         std::string MacroDumpPath = AreaStrNum + "/macro.inc.c";
-        ExportMacroObjects(Rom, I, LvlName, MacroSegAddr, Script, MacroDumpPath.c_str());
+        ExportMacroObjects(Rom, I, LvlName, MacroSegAddr, MacroDumpPath.c_str());
 
         printf("%s Area %u done\n", LvlName.c_str(), I);
     }

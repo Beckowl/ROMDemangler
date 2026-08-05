@@ -1,106 +1,6 @@
 #include "Decompress.h"
 
-std::vector<u8> DecompressMIO0(N64Rom &Rom, u32 RomStart) {
-    auto ReadU32 = [&](u32 Off) { return Rom.ReadBytesPhysical<u32>(Off); };
-    auto ReadU16 = [&](u32 Off) { return Rom.ReadBytesPhysical<u16>(Off); };
-    auto ReadU8  = [&](u32 Off) { return Rom.ReadBytesPhysical<u8>(Off); };
-    
-    u32 OutSize = ReadU32(RomStart + 0x04);
-    u32 CompOff = ReadU32(RomStart + 0x08);
-    u32 RawOff  = ReadU32(RomStart + 0x0C);
-    
-    u32 CtrlPos = RomStart + 0x10;
-    u32 CompPos = RomStart + CompOff;
-    u32 RawPos  = RomStart + RawOff;
-    
-    std::vector<u8> Out(OutSize);
-    u32 OutPos = 0;
-    
-    u8 Mask = 0;
-    u8 Ctrl = 0;
-    
-    while (OutPos < OutSize) {
-        if (Mask == 0) {
-            Ctrl = ReadU8(CtrlPos++);
-            Mask = 0x80;
-        }
-        
-        if (Ctrl & Mask) {
-            Out[OutPos++] = ReadU8(RawPos++);
-        } else {
-            u16 val = ReadU16(CompPos);
-            CompPos += 2;
-            
-            u32 Length = (val >> 12) + 3;
-            u32 Offset = (val & 0x0FFF) + 1;
-            
-            for (u32 i = 0; i < Length; i++) {
-                Out[OutPos] = Out[OutPos - Offset];
-                OutPos++;
-            }
-        }
-        
-        Mask >>= 1;
-    }
-    
-    return Out;
-}
-
-std::vector<u8> DecompressYAY0(N64Rom &Rom, u32 RomStart) {
-    auto ReadU32 = [&](u32 Off) { return Rom.ReadBytesPhysical<u32>(Off); };
-    auto ReadU16 = [&](u32 Off) { return Rom.ReadBytesPhysical<u16>(Off); };
-    auto ReadU8  = [&](u32 Off) { return Rom.ReadBytesPhysical<u8>(Off); };
-    
-    u32 OutSize = ReadU32(RomStart + 0x04);
-    u32 LinkOff = ReadU32(RomStart + 0x08);
-    u32 NonLinkOff = ReadU32(RomStart + 0x0C);
-    
-    u32 CtrlPos = RomStart + 0x10;
-    u32 LinkPos = RomStart + LinkOff;
-    u32 NonLinkPos = RomStart + NonLinkOff;
-    
-    std::vector<u8> Out(OutSize);
-    u32 OutPos = 0;
-    
-    u32 Mask = 0;
-    u32 BitsLeft = 0;
-    
-    while (OutPos < OutSize) {
-        if (BitsLeft == 0) {
-            Mask = ReadU32(CtrlPos);
-            CtrlPos += 4;
-            BitsLeft = 32;
-        }
-        
-        if (Mask & 0x80000000) {
-            Out[OutPos++] = ReadU8(NonLinkPos++);
-        } else {
-            u16 LinkVal = ReadU16(LinkPos);
-            LinkPos += 2;
-            
-            u32 Length = LinkVal >> 12;
-            u32 Offset = (LinkVal & 0x0FFF) + 1;
-            
-            if (Length == 0) {
-                Length = ReadU8(NonLinkPos++) + 0x12;
-            } else {
-                Length += 2;
-            }
-            
-            for (u32 i = 0; i < Length; i++) {
-                Out[OutPos] = Out[OutPos - Offset];
-                OutPos++;
-            }
-        }
-        
-        Mask <<= 1;
-        BitsLeft--;
-    }
-    
-    return Out;
-}
-
-
+// rnc helpers
 struct HuffmanEntry {
     u16 CodeValue = 0;
     u8 BitDepth = 0;
@@ -349,40 +249,142 @@ static void ProcessMethod2(RNCDecoderState &State) {
     }
 }
 
-std::vector<u8> DecompressRNC(N64Rom &Rom, u32 RomStart) {
-    u8 CompressionMethod = Rom.ReadBytesPhysical<u8>(RomStart + 3);
-    
-    u32 TargetSize = 0;
-    for (int I = 0; I < 4; I++) {
-        TargetSize = (TargetSize << 8) | Rom.ReadBytesPhysical<u8>(RomStart + 4 + I);
-    }
-
-    if (CompressionMethod == 0) {
-        std::vector<u8> UncompressedData(TargetSize);
-        for (u32 I = 0; I < TargetSize; I++) {
-            UncompressedData[I] = Rom.ReadBytesPhysical<u8>(RomStart + 0x12 + I);
+namespace Compression {
+    std::vector<u8> DecompressMIO0(N64Rom &Rom, u32 RomStart) {
+        auto ReadU32 = [&](u32 Off) { return Rom.ReadBytesPhysical<u32>(Off); };
+        auto ReadU16 = [&](u32 Off) { return Rom.ReadBytesPhysical<u16>(Off); };
+        auto ReadU8  = [&](u32 Off) { return Rom.ReadBytesPhysical<u8>(Off); };
+        
+        u32 OutSize = ReadU32(RomStart + 0x04);
+        u32 CompOff = ReadU32(RomStart + 0x08);
+        u32 RawOff  = ReadU32(RomStart + 0x0C);
+        
+        u32 CtrlPos = RomStart + 0x10;
+        u32 CompPos = RomStart + CompOff;
+        u32 RawPos  = RomStart + RawOff;
+        
+        std::vector<u8> Out(OutSize);
+        u32 OutPos = 0;
+        
+        u8 Mask = 0;
+        u8 Ctrl = 0;
+        
+        while (OutPos < OutSize) {
+            if (Mask == 0) {
+                Ctrl = ReadU8(CtrlPos++);
+                Mask = 0x80;
+            }
+            
+            if (Ctrl & Mask) {
+                Out[OutPos++] = ReadU8(RawPos++);
+            } else {
+                u16 val = ReadU16(CompPos);
+                CompPos += 2;
+                
+                u32 Length = (val >> 12) + 3;
+                u32 Offset = (val & 0x0FFF) + 1;
+                
+                for (u32 i = 0; i < Length; i++) {
+                    Out[OutPos] = Out[OutPos - Offset];
+                    OutPos++;
+                }
+            }
+            
+            Mask >>= 1;
         }
-        return UncompressedData;
+        
+        return Out;
     }
 
-    RNCDecoderState State;
-    State.Rom = &Rom;
-    State.ReadOffset = RomStart + 0x12;
-    State.OutBuffer.resize(TargetSize);
-    State.WriteOffset = 0;
-    State.TargetSize = TargetSize;
-    State.BitCount = 0;
-    State.BitStreamM1 = 0;
-    State.BitStreamM2 = 0;
-
-    if (CompressionMethod == 1) {
-        ProcessMethod1(State);
-    } else if (CompressionMethod == 2) {
-        ProcessMethod2(State);
-    } else {
-        printf("Unsupported RNC Method: %d\n", CompressionMethod);
-        return {};
+    std::vector<u8> DecompressYAY0(N64Rom &Rom, u32 RomStart) {
+        auto ReadU32 = [&](u32 Off) { return Rom.ReadBytesPhysical<u32>(Off); };
+        auto ReadU16 = [&](u32 Off) { return Rom.ReadBytesPhysical<u16>(Off); };
+        auto ReadU8  = [&](u32 Off) { return Rom.ReadBytesPhysical<u8>(Off); };
+        
+        u32 OutSize = ReadU32(RomStart + 0x04);
+        u32 LinkOff = ReadU32(RomStart + 0x08);
+        u32 NonLinkOff = ReadU32(RomStart + 0x0C);
+        
+        u32 CtrlPos = RomStart + 0x10;
+        u32 LinkPos = RomStart + LinkOff;
+        u32 NonLinkPos = RomStart + NonLinkOff;
+        
+        std::vector<u8> Out(OutSize);
+        u32 OutPos = 0;
+        
+        u32 Mask = 0;
+        u32 BitsLeft = 0;
+        
+        while (OutPos < OutSize) {
+            if (BitsLeft == 0) {
+                Mask = ReadU32(CtrlPos);
+                CtrlPos += 4;
+                BitsLeft = 32;
+            }
+            
+            if (Mask & 0x80000000) {
+                Out[OutPos++] = ReadU8(NonLinkPos++);
+            } else {
+                u16 LinkVal = ReadU16(LinkPos);
+                LinkPos += 2;
+                
+                u32 Length = LinkVal >> 12;
+                u32 Offset = (LinkVal & 0x0FFF) + 1;
+                
+                if (Length == 0) {
+                    Length = ReadU8(NonLinkPos++) + 0x12;
+                } else {
+                    Length += 2;
+                }
+                
+                for (u32 i = 0; i < Length; i++) {
+                    Out[OutPos] = Out[OutPos - Offset];
+                    OutPos++;
+                }
+            }
+            
+            Mask <<= 1;
+            BitsLeft--;
+        }
+        
+        return Out;
     }
 
-    return State.OutBuffer;
+    std::vector<u8> DecompressRNC(N64Rom &Rom, u32 RomStart) {
+        u8 CompressionMethod = Rom.ReadBytesPhysical<u8>(RomStart + 3);
+        
+        u32 TargetSize = 0;
+        for (int I = 0; I < 4; I++) {
+            TargetSize = (TargetSize << 8) | Rom.ReadBytesPhysical<u8>(RomStart + 4 + I);
+        }
+
+        if (CompressionMethod == 0) {
+            std::vector<u8> UncompressedData(TargetSize);
+            for (u32 I = 0; I < TargetSize; I++) {
+                UncompressedData[I] = Rom.ReadBytesPhysical<u8>(RomStart + 0x12 + I);
+            }
+            return UncompressedData;
+        }
+
+        RNCDecoderState State;
+        State.Rom = &Rom;
+        State.ReadOffset = RomStart + 0x12;
+        State.OutBuffer.resize(TargetSize);
+        State.WriteOffset = 0;
+        State.TargetSize = TargetSize;
+        State.BitCount = 0;
+        State.BitStreamM1 = 0;
+        State.BitStreamM2 = 0;
+
+        if (CompressionMethod == 1) {
+            ProcessMethod1(State);
+        } else if (CompressionMethod == 2) {
+            ProcessMethod2(State);
+        } else {
+            printf("Unsupported RNC Method: %d\n", CompressionMethod);
+            return {};
+        }
+
+        return State.OutBuffer;
+    }
 }
