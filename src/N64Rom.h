@@ -9,12 +9,36 @@
 #include <vector>
 #include <bit>
 
-enum SM64GameType {
+enum SM64GameTypeID {
     GT_UNKNOWN,
     GT_ROM_MANAGER,
     GT_EDITOR,
     GT_BBP,
-    GT_DECOMP
+    GT_DECOMP,
+    GT_HACKER
+};
+
+struct SM64GameType {
+    u8 ID = GT_UNKNOWN;
+
+    void SetID(u8 NewID) {
+        ID = NewID;
+    }
+    bool IsOldBinary(void) {
+        return (ID == GT_ROM_MANAGER || ID == GT_EDITOR);
+    }
+    bool IsNewBinary(void) {
+        return (ID == GT_BBP);
+    }
+    bool IsDecomp(void) {
+        return (ID == GT_DECOMP || ID == GT_HACKER);
+    }
+    bool IsHacker(void) {
+        return (ID == GT_HACKER);
+    }
+    u8 GetID(void) {
+        return ID;
+    }
 };
 
 enum N64Microcode {
@@ -25,7 +49,7 @@ enum N64Microcode {
     UCODE_F3DZEX,
 };
 
-extern enum SM64GameType GameType;
+extern SM64GameType GameType;
 extern bool ExportSegment0;
 
 extern std::vector<u8> SegmentData[MAX_SEGMENT];

@@ -114,7 +114,7 @@ void ExportSequences(N64Rom &Rom) {
         printf("No ALSeqFile could be found.\n");
         return;
     }
-    if (GameType == GT_ROM_MANAGER || GameType == GT_EDITOR) {
+    if (GameType.IsOldBinary()) {
         GetSequenceNames(Rom);
     }
 
@@ -160,7 +160,7 @@ void GetSequenceNames(N64Rom &Rom) {
 }
 
 u8 GetSeqNInst(N64Rom &Rom, u8 SeqID) {
-    u32 SeqMagic = (GameType == GT_DECOMP) ? 0x7b0800 : 0x7f0000;
+    u32 SeqMagic = (GameType.IsDecomp()) ? 0x7b0800 : 0x7f0000;
 
     u32 Entry = SeqMagic + SeqID * 2;
 

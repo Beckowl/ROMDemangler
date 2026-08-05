@@ -31,11 +31,13 @@ f32 CalculateTriangleArea(const FloatVertex3D &V1, const FloatVertex3D &V2, cons
     return (AreaSq > 0.0f) ? std::sqrt(AreaSq) : 0.0f;
 }
 
-void ExportCollision(N64Rom &Rom, u8 Area, const std::string &LvlName, u32 Entry, LevelScript &Script, const char *FilePath) {
+void ExportCollision(N64Rom &Rom, u8 Area, const std::string &LvlName, u32 SegAddr, LevelScript &Script, const char *FilePath) {
 Retry:
     FILE *ColDump = fopen(FilePath, "w");
     fprintf(ColDump, "const Collision %s_area_%u_collision[] = {\n", LvlName.c_str(), Area);
     fprintf(ColDump, "    COL_INIT(),\n");
+
+    u32 Entry = SegAddr;
 
     s16 NumVerts = Rom.ReadBytes<s16>(Entry + 2);
     Entry += 4;

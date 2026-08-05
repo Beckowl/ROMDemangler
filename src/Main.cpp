@@ -10,7 +10,7 @@ std::string ActorsExport = "none";
 bool SoundExport = false;
 bool TweakExport = false;
 bool CollisionFix = false;
-enum SM64GameType GameType = GT_UNKNOWN;
+SM64GameType GameType;
 u32 FoundScriptEntry = 0;
 bool ExportSegment0 = false;
 bool IgnoreSegment0 = false;
@@ -196,16 +196,16 @@ int main(int argc, char** argv) {
     u64 PatternInRom2 = Rom.ReadBytesPhysical<u64>(EDITOR_MAGIC_ADDR+8);
     for (auto &P : EditorPatterns) {
         if (PatternInRom == P || PatternInRom2 == P) {
-            GameType = GT_EDITOR;
+            GameType.SetID(GT_EDITOR);
             GameTypeStr += "SM64 Editor";
             break;
         }
     }
     
-    if (GameType != GT_EDITOR) {
+    if (GameType.GetID() != GT_EDITOR) {
         if (Rom.Size >= BBP_SIGNATURE_ADDR) {
             if (Rom.ReadBytesPhysical<u32>(BBP_SIGNATURE_ADDR) == BBP_SIGNATURE) {
-                GameType = GT_BBP;
+                GameType.SetID(GT_BBP);
                 GameTypeStr += "Bowser's Blueprints ";
 
                 u32 BBPMetaDataAddr = Rom.ReadBytesPhysical<u32>(BBP_SIGNATURE_ADDR+4);
@@ -216,7 +216,7 @@ int main(int argc, char** argv) {
             }
         }
 
-        if (GameType != GT_BBP) {
+        if (GameType.GetID() != GT_BBP) {
             u32 VOffset = RM_VERSION_ADDR;
             s32 DevInfo = Rom.ReadBytesPhysical<s32>(VOffset);
             u8 Major = Rom.ReadBytesPhysical<u8>(VOffset+4);
@@ -232,15 +232,13 @@ int main(int argc, char** argv) {
                 Version += std::format(".{}", Revision);
             }
             if (SM64ROMManagerVersions.count(Version)) {
-                GameType = GT_ROM_MANAGER;
+                GameType.SetID(GT_ROM_MANAGER);
                 GameTypeStr += "SM64 ROM Manager " + Version;
             }
         }
     }
 
-    if (GameType == GT_UNKNOWN) {
-        GameType = GT_DECOMP;
-
+    if (GameType.GetID() == GT_UNKNOWN) {
         const u8 Pattern[] = {
             0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x00, 0x00, 0x00, 0x00,
             0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x00, 0x00, 0x00, 0x00,
@@ -256,8 +254,10 @@ int main(int argc, char** argv) {
         u8* Found = std::search(Start, End, Pattern, Pattern + PatternLen);
         if (Found != End) {
             GameTypeStr += "HackerSM64";
+            GameType.SetID(GT_HACKER);
         } else {
             GameTypeStr += "Decomp";
+            GameType.SetID(GT_DECOMP);
         }
     }
     printf("%s", (GameTypeStr + "\n").c_str());

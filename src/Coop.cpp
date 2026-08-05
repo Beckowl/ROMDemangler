@@ -67,7 +67,7 @@ void ExportLua(N64Rom &Rom) {
         }
     }
     if (TweakExport) {
-        if (GameType == GT_ROM_MANAGER || GameType == GT_EDITOR) {
+        if (GameType.IsOldBinary()) {
             fprintf(LuaDump, "\n-- Tweaks\n%s", GetRomTweaks(Rom).c_str());
         }
     }

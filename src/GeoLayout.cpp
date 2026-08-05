@@ -41,6 +41,38 @@ std::string GeoCommandsName[] = {
     "GEO_CULLING_RADIUS",
 };
 
+std::string GetGeoLayerName(u8 Layer) {
+    if (!GameType.IsHacker()) {
+        switch (Layer) {
+            case 0: return "LAYER_FORCE";
+            case 1: return "LAYER_OPAQUE";
+            case 2: return "LAYER_OPAQUE_DECAL";
+            case 3: return "LAYER_OPAQUE_INTER";
+            case 4: return "LAYER_ALPHA";
+            case 5: return "LAYER_TRANSPARENT";
+            case 6: return "LAYER_TRANSPARENT_DECAL";
+            case 7: return "LAYER_TRANSPARENT_INTER";
+        }
+    } else {
+        switch (Layer) {
+            case 0: return "LAYER_FORCE";
+            case 1: return "LAYER_OPAQUE";
+            case 2: return "LAYER_OPAQUE_INTER";
+            case 3: return "LAYER_OPAQUE_DECAL";
+            case 4: return "LAYER_ALPHA";
+            case 5: return "LAYER_ALPHA_DECAL";
+            case 6: return "LAYER_SILHOUETTE_OPAQUE";
+            case 7: return "LAYER_SILHOUETTE_ALPHA";
+            case 8: return "LAYER_OCCLUDE_SILHOUETTE_OPAQUE";
+            case 9: return "LAYER_OCCLUDE_SILHOUETTE_ALPHA";
+            case 10: return "LAYER_TRANSPARENT_DECAL";
+            case 11: return "LAYER_TRANSPARENT";
+            case 12: return "LAYER_TRANSPARENT_INTER";
+        }
+    }
+    return "LAYER_OPAQUE";
+}
+
 std::string GetGeoDLName(LevelScript &Script, u8 Area, u32 DisplayList) {
     if (Script.CurrentActor) {
         return std::format("{}_displaylist_{:#x}", Script.CurrentActor->Name, DisplayList);
@@ -388,12 +420,12 @@ std::string GeoCmdTransRot(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area
             }
             OutArgs = std::format(
                 "{}, {}, {}",
-                Layer & ~(0x80 | 0x30), YRot, DisplayListName
+                GetGeoLayerName(Layer & ~(0x80 | 0x30)), YRot, DisplayListName
             );
         } else {
             OutArgs = std::format(
                 "{}, {}",
-                Layer & ~0x30, YRot
+                GetGeoLayerName(Layer & ~0x30), YRot
             );
         }
     } else if (Layer & 0x20) {
@@ -410,12 +442,12 @@ std::string GeoCmdTransRot(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area
             }
             OutArgs = std::format(
                 "{}, {}, {}, {}, {}",
-                Layer & ~(0x80 | 0x20), XRot, YRot, ZRot, DisplayListName
+                GetGeoLayerName(Layer & ~(0x80 | 0x20)), XRot, YRot, ZRot, DisplayListName
             );
         } else {
             OutArgs = std::format(
                 "{}, {}, {}, {}",
-                Layer & ~0x20, XRot, YRot, ZRot
+                GetGeoLayerName(Layer & ~0x20), XRot, YRot, ZRot
             );
         }
     } else if (Layer & 0x10) {
@@ -432,12 +464,12 @@ std::string GeoCmdTransRot(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area
             }
             OutArgs = std::format(
                 "{}, {}, {}, {}, {}",
-                Layer & ~(0x80 | 0x10), XTrans, YTrans, ZTrans, DisplayListName
+                GetGeoLayerName(Layer & ~(0x80 | 0x10)), XTrans, YTrans, ZTrans, DisplayListName
             );
         } else {
             OutArgs = std::format(
                 "{}, {}, {}, {}",
-                Layer & ~0x10, XTrans, YTrans, ZTrans
+                GetGeoLayerName(Layer & ~0x10), XTrans, YTrans, ZTrans
             );
         }
     } else {
@@ -457,12 +489,12 @@ std::string GeoCmdTransRot(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area
             }
             OutArgs = std::format(
                 "{}, {}, {}, {}, {}, {}, {}, {}",
-                Layer & ~0x80, XTrans, YTrans, ZTrans, XRot, YRot, ZRot, DisplayListName
+                GetGeoLayerName(Layer & ~0x80), XTrans, YTrans, ZTrans, XRot, YRot, ZRot, DisplayListName
             );
         } else {
             OutArgs = std::format(
                 "{}, {}, {}, {}, {}, {}, {}",
-                Layer, XTrans, YTrans, ZTrans, XRot, YRot, ZRot
+                GetGeoLayerName(Layer), XTrans, YTrans, ZTrans, XRot, YRot, ZRot
             );
         }
     }
@@ -506,12 +538,12 @@ std::string GeoCmdTransNode(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Are
 
         OutArgs = std::format(
             "{}, {}, {}, {}, {}",
-            Layer & ~0x80, TransX, TransY, TransZ, DisplayListName
+            GetGeoLayerName(Layer & ~0x80), TransX, TransY, TransZ, DisplayListName
         );
     } else {
         OutArgs = std::format(
             "{}, {}, {}, {}",
-            Layer, TransX, TransY, TransZ
+            GetGeoLayerName(Layer), TransX, TransY, TransZ
         );
     }
 
@@ -554,12 +586,12 @@ std::string GeoCmdRotNode(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area)
 
         OutArgs = std::format(
             "{}, {}, {}, {}, {}",
-            Layer & ~0x80, RotX, RotY, RotZ, DisplayListName
+            GetGeoLayerName(Layer & ~0x80), RotX, RotY, RotZ, DisplayListName
         );
     } else {
         OutArgs = std::format(
             "{}, {}, {}, {}",
-            Layer, RotX, RotY, RotZ
+            GetGeoLayerName(Layer), RotX, RotY, RotZ
         );
     }
 
@@ -594,7 +626,7 @@ std::string GeoCmdAnimatedPart(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 
     }
     std::string OutArgs = std::format(
         "{}, {}, {}, {}, {}",
-        Layer, TransX, TransY, TransZ, DisplayListName
+        GetGeoLayerName(Layer), TransX, TransY, TransZ, DisplayListName
     );
 
     return OutArgs;
@@ -637,12 +669,12 @@ std::string GeoCmdBillboard(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Are
         }
         OutArgs = std::format(
             "{}, {}, {}, {}, {}",
-            Layer & ~0x80, TransX, TransY, TransZ, DisplayListName
+            GetGeoLayerName(Layer & ~0x80), TransX, TransY, TransZ, DisplayListName
         );
     } else {
         OutArgs = std::format(
             "{}, {}, {}, {}",
-            Layer, TransX, TransY, TransZ
+            GetGeoLayerName(Layer), TransX, TransY, TransZ
         );
     }
 
@@ -671,7 +703,7 @@ std::string GeoCmdDisplayList(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 A
     }
     std::string OutArgs = std::format(
         "{}, {}",
-        Layer, DisplayListName
+        GetGeoLayerName(Layer), DisplayListName
     );
 
     return OutArgs;
@@ -827,12 +859,12 @@ std::string GeoCmdScale(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area) {
 
         OutArgs = std::format(
             "{}, {}, {}",
-            Layer & ~0x80, Scale, DisplayListName
+            GetGeoLayerName(Layer & ~0x80), Scale, DisplayListName
         );
     } else {
         OutArgs = std::format(
             "{}, {}",
-            Layer, Scale
+            GetGeoLayerName(Layer), Scale
         );
     }
 

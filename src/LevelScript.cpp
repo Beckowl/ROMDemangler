@@ -812,7 +812,7 @@ std::string LvlCmdLoadModelFromGeo(N64Rom &Rom, LevelScript &Script, u32 &Start)
     const std::string BuiltinName = ActorGroup::GetGeoName(Group, Geo);
 
     if (!GeoName.starts_with("Custom_") && BuiltinName != "" && (GeoBank == 0x0D || GeoBank == 0x0C) &&
-        (GameType == GT_ROM_MANAGER || GameType == GT_EDITOR)) {
+        (GameType.IsOldBinary())) {
         GeoName = BuiltinName;
     }
 
@@ -866,8 +866,8 @@ std::string LvlCmdPlaceObject(N64Rom &Rom, LevelScript &Script, u32 &Start) {
     u32 Bhv = Rom.ReadBytes<u32>(Start + 20, false);
 
     std::string BhvName = GetLabelFromMap(Bhv);
-    if (GameType == GT_ROM_MANAGER || GameType == GT_EDITOR) {
-        if (BhvName == "RM_Scroll_Texture" || BhvName == "editor_Scroll_Texture" || BhvName == "editor_Scroll_Texture2" || (BhvName == "bhvBetaHoldableObject" && GameType == GT_EDITOR)) {
+    if (GameType.IsOldBinary()) {
+        if (BhvName == "RM_Scroll_Texture" || BhvName == "editor_Scroll_Texture" || BhvName == "editor_Scroll_Texture2" || (BhvName == "bhvBetaHoldableObject" && GameType.GetID() == GT_EDITOR)) {
             ScrollTexture Scroll;
 
             if (BhvName == "bhvBetaHoldableObject") BhvName = "editor_Scroll_Texture2";
@@ -1144,7 +1144,7 @@ void ExportAreas(N64Rom &Rom, LevelScript &Script, const std::string &LvlName) {
         ExportGeolayout(Rom, I, LvlName, GeoSegAddr, GeoSegAddr, Script, GeoDumpPath.c_str());
         std::string ColDumpPath = AreaStrNum + "/collision.inc.c";
         ExportCollision(Rom, I, LvlName, ColSegAddr, Script, ColDumpPath.c_str());
-        if (GameType == GT_ROM_MANAGER || GameType == GT_EDITOR) {
+        if (GameType.IsOldBinary()) {
             std::string MovTextDumpPath = AreaStrNum + "/movtext.inc.c";
             ExportMovTex(Rom, I, LvlName, Script, MovTextDumpPath.c_str());
         }
