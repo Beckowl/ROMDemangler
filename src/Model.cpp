@@ -463,6 +463,7 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, 
 
     for (const auto &V : Vertices) {
         if (!ValidateMemAddr(V.Vtx) || !ExportedVertices.insert(V.VtxSeg).second) continue;
+        if (!IsActor) Script.AreaDatas[Area].Vertices.insert(V.VtxSeg);
 
         fprintf(ModelDump, "Vtx %s_vertex_0x%x[] = {\n", PlaceHolderName, V.VtxSeg);
         for (u32 I = 0; I < V.Size; I++) {
