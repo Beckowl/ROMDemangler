@@ -16,36 +16,8 @@ void ExportLua(N64Rom &Rom) {
     if (!ScrollingTextures.empty()) {
         fprintf(LuaDump, "-- Scrolling Textures\n");
 
-        fprintf(LuaDump,
-            "local _add_scroll_target = add_scroll_target\n"
-            "\n"
-            "local function add_scroll_target(index, name, offset, numVerts)\n"
-            "    local addr = tonumber(name:match(\"0x(%%x+)$\"), 16)\n"
-            "    local prefix = name:match(\"(.-)0x\")\n"
-            "    local baseAddr = addr\n"
-            "\n"
-            "    while not vtx_get_from_name(string.format(\"%%s0x%%x\", prefix, baseAddr)) do\n"
-            "        baseAddr = baseAddr - 0x10\n"
-            "    end\n"
-            "\n"
-            "    local i = 0\n"
-            "\n"
-            "    while i < numVerts do\n"
-            "        local vAddr = addr + i * 0x10\n"
-            "        local vbStart = baseAddr + ((vAddr - baseAddr) // 0xF0) * 0xF0\n"
-            "        local vOffset = (vAddr - vbStart) // 0x10\n"
-            "        local vCount = math.min(15 - vOffset, numVerts - i)\n"
-            "\n"
-            "        _add_scroll_target(index, string.format(\"%%s0x%%x\", prefix, vbStart), vOffset, vCount)\n"
-            "\n"
-            "        i = i + vCount\n"
-            "    end\n"
-            "end\n"
-            "\n"
-        );
-
         for (const auto &Scroll : ScrollingTextures) {
-            fprintf(LuaDump, "--add_scroll_target(%u, \"%s_%u_vertex_0x%x\", %u, %u)\n", Scroll.Index, Scroll.LvlName.c_str(), Scroll.Area, Scroll.Addr, Scroll.Cycle, Scroll.NumVtx);
+            fprintf(LuaDump, "add_scroll_target(0x%08x, \"%s\", %u, %u)\n", Scroll.Id, Scroll.Name.c_str(), Scroll.Offset, Scroll.NumVtx);
         }
     }
 

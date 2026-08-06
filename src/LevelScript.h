@@ -19,6 +19,19 @@
 
 extern std::map<u8, std::string> LevelNames;
 
+struct ScrollTexture {
+    std::string Name;
+    u8 Area = 0;
+    u32 Id = 0;
+    u32 Addr = 0;
+    u32 Offset = 0;
+    u16 NumVtx = 0;
+    s16 Speed = 0;
+    u16 Axis = 0;
+    u16 Type = 0;
+    u8 Cycle = 0;
+};
+
 struct AreaData {
     u32 GeoLayout = 0;
     u32 Collision = 0;
@@ -26,6 +39,7 @@ struct AreaData {
     u8 WaterBoxCount = 0;
     std::vector<s16> WaterBoxParams = {};
     std::vector<u32> DisplayLists = {};
+    std::set<u32> Vertices = {};
 };
 
 class LevelScript {
@@ -37,6 +51,7 @@ public:
     struct AreaData AreaDatas[MAX_AREA] = {};
     std::vector<Actor> Actors;
     std::vector<u8> Areas = {};
+    std::vector<ScrollTexture> ScrollTargets = {};
     u8 CurrArea = 0;
     bool FoundLevel = false;
     std::string Name = "";

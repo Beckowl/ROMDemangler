@@ -34,7 +34,7 @@ bool UsesNewEditorScroll(N64Rom &Rom) {
     return Val != 0x27bdffe8;
 }
 
-ScrollTexture ConvertRMTexScrolls(u32 Bparam, u16 NumVtx, u16 Dir, s16 Speed) {
+ScrollTexture ConvertRMTexScrolls(LevelScript& Script, u32 Bparam, u16 NumVtx, u16 Dir, s16 Speed) {
     ScrollTexture S;
     S.Addr = Bparam;
     S.NumVtx = NumVtx;
@@ -42,11 +42,14 @@ ScrollTexture ConvertRMTexScrolls(u32 Bparam, u16 NumVtx, u16 Dir, s16 Speed) {
     S.Axis = GetScrollAxis(Dir);
     S.Type = GetScrollType(Dir);
     S.Cycle = Dir & 0xFF;
+    S.Area = Script.CurrArea;
+    S.Id = (Script.LevelID << 16) | (Script.ScrollTargets.size() & 0xFF);
+
     return S;
 }
 
 // this is the second most depressing function i have ever wrote
-ScrollTexture ConvertEditorTexScrolls(u32 Bparam, s16 PosX, s16 PosY, s16 PosZ, std::string &BhvName, N64Rom& Rom) {
+ScrollTexture ConvertEditorTexScrolls(LevelScript& Script, u32 Bparam, s16 PosX, s16 PosY, s16 PosZ, std::string &BhvName, N64Rom& Rom) {
     ScrollTexture S;
     
     u32 Addr = 0x0E000000 + ((GetPosByte(PosX) - 2) << 16) + (Bparam >> 16);
@@ -70,6 +73,48 @@ ScrollTexture ConvertEditorTexScrolls(u32 Bparam, s16 PosX, s16 PosY, s16 PosZ, 
     S.Axis = (Dir == 0x8) ? 4 : 5;
     S.Type = 0;
     S.Cycle = 0;
+    S.Area = Script.CurrArea;
+    S.Id = (Script.LevelID << 16) | (Script.ScrollTargets.size() & 0xFFFF);
 
     return S;
+}
+
+void ResolveScrollTargets(LevelScript &Script) {
+    for (const auto &P : Script.ScrollTargets) {
+        std::set<u32> &Vertices = Script.AreaDatas[P.Area].Vertices;
+        u32 BaseAddr = P.Addr;
+
+        for (int i = 0; i < 15; i++) {
+            if (Vertices.count(BaseAddr)) {
+                break;
+            }
+
+            BaseAddr -= 0x10;
+        }
+
+        int i = 0;
+        while (i < P.NumVtx) {
+            ScrollTexture S = {};
+
+            u32 VtxAddr = P.Addr + i * 0x10;
+            u32 VbStart = BaseAddr + ((VtxAddr - BaseAddr) / 0xF0) * 0xF0;
+            u32 VtxOffset = (VtxAddr - VbStart) / 0x10;
+            u32 VtxCount = MIN(15 - VtxOffset, P.NumVtx - i);
+
+            S.Speed = P.Speed;
+            S.Axis = P.Axis;
+            S.Type = P.Type;
+            S.Cycle = P.Cycle;
+            S.Area = P.Area;
+            S.Id = P.Id;
+            S.Offset = VtxOffset;
+            S.NumVtx = VtxCount;
+
+            S.Addr = VtxAddr;
+            S.Name = std::format("{}_{}_vertex_0x{:x}", Script.Name, S.Area, VbStart);
+
+            ScrollingTextures.push_back(S);
+            i += VtxCount;
+        }
+    }
 }

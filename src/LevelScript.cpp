@@ -873,19 +873,16 @@ std::string LvlCmdPlaceObject(N64Rom &Rom, LevelScript &Script, u32 &Start) {
             if (BhvName == "bhvBetaHoldableObject") BhvName = "editor_Scroll_Texture2";
             
             if (BhvName == "RM_Scroll_Texture") {
-                Scroll = ConvertRMTexScrolls(BhvParam, PosX, PosY, PosZ);
+                Scroll = ConvertRMTexScrolls(Script, BhvParam, PosX, PosY, PosZ);
             } else {
-                Scroll = ConvertEditorTexScrolls(BhvParam, PosX, PosY, PosZ, BhvName, Rom);
+                Scroll = ConvertEditorTexScrolls(Script, BhvParam, PosX, PosY, PosZ, BhvName, Rom);
             }
 
-            Scroll.LvlName = Script.Name;
-            Scroll.Area = Script.CurrArea;
-            Scroll.Index = ScrollingTextures.size();
-            ScrollingTextures.push_back(Scroll);
+            Script.ScrollTargets.push_back(Scroll);
 
             std::string OutArgs = std::format(
                 "/* Model */ 0x0, /* Speed */ {}, /* Axis */ {}, /* VCount */ {}, 0, /* Type */ {}, /* Cycle */ {}, /* Index */ {:#x}, {}, /* Act */ {}",
-                Scroll.Speed, Scroll.Axis, Scroll.NumVtx,  Scroll.Type, Scroll.Cycle, Scroll.Index, BhvName, Acts
+                Scroll.Speed, Scroll.Axis, Scroll.NumVtx,  Scroll.Type, Scroll.Cycle, Scroll.Id, BhvName, Acts
             );
             return OutArgs;
         }
@@ -1240,5 +1237,7 @@ void ExportLevel(N64Rom &Rom, u8 LvlID) {
     fclose(ScriptDump);
 
     ExportAreas(Rom, Script, LvlName);
+    ResolveScrollTargets(Script);
+    
     if (ActorsExport != "none") ExportActors(Rom, Script);
 }
