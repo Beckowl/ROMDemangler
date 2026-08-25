@@ -30,6 +30,7 @@ $(BUILD_DIR)/%.o: %.cpp
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
+	cp sm64.us.map build/sm64.us.map
 
 clean:
 	rm -rf $(BUILD_DIR)

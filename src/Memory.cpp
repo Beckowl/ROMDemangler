@@ -40,13 +40,15 @@ void InitMemoryMap() {
 
         std::string Label = Tokens[TCount - 1];
 
-        for (int i = 0; i < TCount; ++i) {
-            char *End = NULL;
-            unsigned long Val = strtoul(Tokens[i], &End, 16);
+        if (TCount == 2) {
+            for (int i = 0; i < TCount; ++i) {
+                char *End = NULL;
+                unsigned long Val = strtoul(Tokens[i], &End, 16);
 
-            if (End == Tokens[i] || *End != '\0') continue;
+                if (End == Tokens[i] || *End != '\0') continue;
 
-            SymbolMap[(u32)Val] = Label;
+                SymbolMap[(u32)Val] = Label;
+            }
         }
     }
     fclose(MapFile);
