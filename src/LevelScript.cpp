@@ -247,7 +247,19 @@ namespace ActorGroup {
         {0x218DA0, "group19"}
     };
 
-    std::string GetGeoName(const std::string &GroupName, u32 Addr) {
+    std::string GetGeoName(u32 Addr) {
+        for (auto &Group : AllGroups) {
+            auto ModelIt = Group.second.find(Addr);
+
+            if (ModelIt != Group.second.end()) {
+                return ModelIt->second;
+            }
+        }
+
+        return "";
+    }
+
+    std::string GetGeoNameWithGroup(const std::string &GroupName, u32 Addr) {
         auto GrouptIt = AllGroups.find(GroupName);
         if (GrouptIt == AllGroups.end()) {
             return "";
@@ -808,12 +820,22 @@ std::string LvlCmdLoadModelFromGeo(N64Rom &Rom, LevelScript &Script, u32 &Start)
 
     u8 GeoBank = Geo >> 24;
     std::string GeoName = GetLabelFromMap(Geo);
-    std::string Group = ActorGroup::FindNearestGroup(SegmentOffsets[GeoBank][0]);
-    const std::string BuiltinName = ActorGroup::GetGeoName(Group, Geo);
 
-    if (!GeoName.starts_with("Custom_") && BuiltinName != "" && (GeoBank == 0x0D || GeoBank == 0x0C) &&
-        (GameType.IsOldBinary())) {
-        GeoName = BuiltinName;
+    if ((!GeoName.starts_with("Custom_") || GeoBank != 0x19) && (GameType.IsOldBinary())) {
+        if (GeoBank == 0x0D || GeoBank == 0x0C) {
+            std::string Group = ActorGroup::FindNearestGroup(SegmentOffsets[GeoBank][0]);
+            const std::string BuiltinName = ActorGroup::GetGeoNameWithGroup(Group, Geo);
+            if (BuiltinName != "") {
+                GeoName = BuiltinName;
+            }
+        } else {
+            if (GeoBank != 0x0F && GeoBank != 0x00 && GeoBank != 0x03 && GeoBank != 0x12) {
+                const std::string BuiltinName = ActorGroup::GetGeoName(Geo);
+                if (BuiltinName != "") {
+                    GeoName = BuiltinName;
+                }
+            }
+        }
     }
 
     if (Geo) {
