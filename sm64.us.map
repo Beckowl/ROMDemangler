@@ -5855,7 +5855,7 @@ Linker script and memory map
  .data          0x0f000000      0xb40 build/us/actors/common0_geo.o
                 0x0f000000                blue_coin_switch_geo
                 0x0f000020                test_platform_geo
-                0x0f000028                dAmpGeo
+                0x0f000028                amp_geo
                 0x0f0001a8                cannon_base_geo
                 0x0f0001c0                cannon_barrel_geo
                 0x0f0001d8                chuckya_geo
