@@ -279,6 +279,7 @@ int main(int argc, char** argv) {
 
     if (SoundExport) ExportSequences(Rom);
     ExportLua(Rom);
+    printf("Export done!\n");
     Rom.CloseFile();
     return 0;
 }

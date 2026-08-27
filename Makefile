@@ -19,7 +19,7 @@ SOURCES := $(wildcard $(addsuffix /*.cpp,$(DIRECTORIES)))
 
 OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(SOURCES))
 
-all: $(BUILD_DIR) $(BUILD_DIR)/$(TARGET)
+all: $(BUILD_DIR) $(BUILD_DIR)/$(TARGET) copyFiles
 
 $(BUILD_DIR)/$(TARGET): $(OBJECTS)
 	$(CXX) $(OBJECTS) -o $@ $(LDFLAGS)
@@ -30,9 +30,13 @@ $(BUILD_DIR)/%.o: %.cpp
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
-	cp sm64.us.map build/sm64.us.map
+
+copyFiles:
+	cp sm64.us.map $(BUILD_DIR)/sm64.us.map
+	cp gui.pyw $(BUILD_DIR)/gui.pyw
+	cp -r gui/ $(BUILD_DIR)/gui/
 
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: all clean
+.PHONY: all clean copyFiles
