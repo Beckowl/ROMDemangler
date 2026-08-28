@@ -151,6 +151,15 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
 
         switch (Cmd) {
             case G_SETTIMG: {
+                // if we already have tex, dont override
+                // hopefully this doesnt break aynthing :pray:
+                if (!Textures.empty()) {
+                    F3DTexture &Cur = Textures.back();
+                    if (Cur.Texture != 0 && Cur.Texture != W1 && Cur.Texture != Cur.Palette) {
+                        PushActiveTextures(Textures);
+                    }
+                }
+
                 u32 ImgType = C0(21, 3);
                 u32 BitDepth = GetBitDepthFromSize(C0(19, 2));
 
