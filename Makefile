@@ -33,8 +33,8 @@ $(BUILD_DIR):
 
 copyFiles:
 	cp sm64.us.map $(BUILD_DIR)/sm64.us.map
-	cp gui.pyw $(BUILD_DIR)/gui.pyw
-	cp -r gui/ $(BUILD_DIR)/gui/
+	cp ROMDemanglerGUI.py $(BUILD_DIR)/ROMDemanglerGUI.py
+	cp -r gui/ $(BUILD_DIR)/
 
 clean:
 	rm -rf $(BUILD_DIR)

@@ -224,8 +224,11 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
 
     switch (Cmd) {
         case G_SETTIMG:
-            fprintf(ModelDump, "    gsDPSetTextureImage(%u, %u, 1, %s_texture_0x%x),\n", 
-                    C0(21,3), C0(19,2), GetPlaceHolderName().c_str(), W1);
+            if (ValidateMemAddr(W1)) {
+                fprintf(ModelDump, "    gsDPSetTextureImage(%u, %u, 1, %s_texture_0x%x),\n", C0(21,3), C0(19,2), GetPlaceHolderName().c_str(), W1);
+            } else {
+                fprintf(ModelDump, "    // gsDPSetTextureImage(%u, %u, 1, %s_texture_0x%x),\n", C0(21,3), C0(19,2), GetPlaceHolderName().c_str(), W1);
+            }
             break;
         case G_SETTILE:
             fprintf(ModelDump, "    gsDPSetTile(%u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u),\n", 
@@ -290,10 +293,10 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList, std::vector<F3DVert
             if (Cmd == (u8)G_ENDDL) break;
             
             switch (Cmd) {
-                case G_VTX: 
+                case G_VTX:
                     Vertices.push_back({ W1, W1, (C0(0, 16)) / 16 }); 
                     break;
-                case G_MOVEMEM: 
+                case G_MOVEMEM:
                     (C0(16, 8) == 0x88 ? Ambients : Lights).push_back({ W1, W1 }); 
                     break;
                 case G_DL: {
@@ -314,10 +317,10 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList, std::vector<F3DVert
             if (Cmd == G_ENDDL_F3DEX2) break;
             
             switch (Cmd) {
-                case G_VTX_F3DEX2: 
+                case G_VTX_F3DEX2:
                     Vertices.push_back({ W1, W1, C0(12, 8) }); 
                     break;
-                case G_MOVEMEM_F3DEX2: 
+                case G_MOVEMEM_F3DEX2:
                     (((C0(8, 8) * 8) / 24 - 2) == 1 ? Ambients : Lights).push_back({ W1, W1 }); 
                     break;
                 case G_DL_F3DEX2: {
@@ -331,7 +334,7 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList, std::vector<F3DVert
                     break;
                 }
                 case G_TRI1_F3DEX2:
-                case G_TRI2_F3DEX2: 
+                case G_TRI2_F3DEX2:
                     PushActiveTextures(Textures);
                     break;
             }
@@ -339,10 +342,10 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList, std::vector<F3DVert
             if (Cmd == (u8)G_ENDDL) break;
             
             switch (Cmd) {
-                case G_VTX: 
+                case G_VTX:
                     Vertices.push_back({ W1, W1, C0(10, 6) }); 
                     break;
-                case G_MOVEMEM: 
+                case G_MOVEMEM:
                     (C0(16, 8) == 0x88 ? Ambients : Lights).push_back({ W1, W1 }); 
                     break;
                 case G_DL: {
@@ -356,7 +359,7 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList, std::vector<F3DVert
                     break;
                 }
                 case G_TRI2_F3DEX:
-                case (u8)G_TRI1: 
+                case (u8)G_TRI1:
                     PushActiveTextures(Textures);
                     break;
             }
@@ -531,7 +534,11 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, 
 
                 switch(Cmd) {
                     case G_VTX:
-                        fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(0,16)/16, C0(16,4));
+                        if (ValidateMemAddr(W1)) {
+                            fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(0,16)/16, C0(16,4));
+                        } else {
+                            fprintf(ModelDump, "    // gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(0,16)/16, C0(16,4));
+                        }
                         break;
                     case (u8)G_TRI1: {
                         u32 NextW0 = Rom.ReadBytes<u32>(Entry + 8);
@@ -570,7 +577,11 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, 
 
                 switch(Cmd) {
                     case G_VTX_F3DEX2:
-                        fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(12, 8), (C0(1, 7) - C0(12, 8)));
+                        if (ValidateMemAddr(W1)) {
+                            fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(12, 8), (C0(1, 7) - C0(12, 8)));
+                        } else {
+                            fprintf(ModelDump, "    // gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(12, 8), (C0(1, 7) - C0(12, 8)));
+                        }
                         break;
                     case G_TRI1_F3DEX2:
                         fprintf(ModelDump, "    gsSP1Triangle(%u, %u, %u, 0),\n", C0(16, 8) / 2, C0(8, 8) / 2, C0(0, 8) / 2);
@@ -600,7 +611,11 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, 
 
                 switch(Cmd) {
                     case G_VTX:
-                        fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(10,6), C0(16, 8) / 2);
+                        if (ValidateMemAddr(W1)) {
+                            fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(10,6), C0(16, 8) / 2);
+                        } else {
+                            fprintf(ModelDump, "    // gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(10,6), C0(16, 8) / 2);
+                        }
                         break;
                     case (u8)G_TRI1:
                         fprintf(ModelDump, "    gsSP1Triangle(%u, %u, %u, 0),\n", C1(16, 8) / 2, C1(8, 8) / 2, C1(0, 8) / 2);
