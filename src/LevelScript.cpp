@@ -1215,11 +1215,33 @@ void ExportLevel(N64Rom &Rom, u8 LvlID) {
         Entry = SegmentOffsets[0x10][0] = FoundScriptEntry;
     }
 
+    bool ForceDontPrint = false;
+    bool OldBinaryHack = GameType.IsOldBinary();
+
     auto ShouldPrintCmd = [&](u8 Cmd) {
         if (!Script.FoundLevel) {
             return false;
         }
+
+        if ((Entry >> 24) == 0x15 && ForceDontPrint && OldBinaryHack) {
+            return false;
+        }
+
         if (IsJumpLvlCmd(Cmd)) {
+            if (OldBinaryHack) {
+                if (Cmd == 0x06) {
+                    u32 Target = Rom.ReadBytes<u32>(Entry + 4, false);
+                    if ((Target >> 24) == 0x15) {
+                        ForceDontPrint = true;
+                        return true;
+                    }
+                }
+
+                if (Cmd == 0x07) {
+                    ForceDontPrint = false;
+                }
+            }
+
             if (Cmd != 0x02) {
                 return false;
             }
