@@ -84,6 +84,33 @@ std::string GeoCmdStub(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area) {
     return "";
 };
 
+std::string GeoCmdBranchAndLink(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area) {
+    /**
+    * 0x00: Branch and store return address
+    *   0x04: scriptTarget, segment address of geo layout
+    *
+    #define GEO_BRANCH_AND_LINK(scriptTarget) \
+        CMD_BBH(0x00, 0x00, 0x0000), \
+        CMD_PTR(scriptTarget)
+    */
+
+    u32 ScriptTarget = Rom.ReadBytes<u32>(Start + 4);
+
+    std::string ScriptTargetName;
+    if (Script.CurrentActor) {
+        ScriptTargetName = std::format("{}_geo_{:x}", Script.CurrentActor->Name, ScriptTarget);
+    } else {
+        ScriptTargetName = std::format("{}_area_{}_geo_{:x}", Script.Name, Area, ScriptTarget);
+    }
+
+    std::string OutArgs = std::format(
+        "{}",
+        ScriptTargetName
+    );
+
+    return OutArgs;
+};
+
 std::string GeoCmdEnd(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area) {
     /**
      * 0x01: Terminate geo layout
@@ -92,8 +119,6 @@ std::string GeoCmdEnd(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area) {
     #define GEO_END() \
         CMD_BBH(0x01, 0x00, 0x0000)
     */
-
-    Start = UINT32_MAX;
 
     return "";
 };
@@ -137,8 +162,6 @@ std::string GeoCmdReturn(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area) 
     #define GEO_RETURN() \
         CMD_BBH(0x03, 0x00, 0x0000)
     */
-
-    Start = UINT32_MAX;
 
     return "";
 };
@@ -893,7 +916,7 @@ std::string GeoCmdCullRadius(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Ar
 };
 
 std::string (*GeoCommandsFunctions[])(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Area) = {
-    (nullptr),            GeoCmdEnd,             GeoCmdBranch,          GeoCmdReturn,
+    GeoCmdBranchAndLink,  GeoCmdEnd,             GeoCmdBranch,          GeoCmdReturn,
     GeoCmdStub,           GeoCmdStub,            (nullptr),             (nullptr),
     GeoCmdScreenArea,     GeoCmdOrtho,           GeoCmdCamFrustum,      GeoCmdStub,
     GeoCmdZbuffer,        GeoCmdRenderRange,     GeoCmdSwitchCase,      GeoCmdCamera,
@@ -946,6 +969,7 @@ u8 GetGeolayoutCmdSize(N64Rom &Rom, u32 Entry) {
         case 0x19:
         case 0x18:
         case 0x02:
+        case 0x00:
         case 0x0E:
         case 0x0D:
             return 8;
@@ -1035,17 +1059,25 @@ void WriteGeoLayoutRecursive(FILE *GeoDump, N64Rom &Rom, u8 Area, std::string Lv
     if (!SegAddr || ProcessedGeos[SegAddr]) return;
     ProcessedGeos[SegAddr] = true;
     u32 ScanEntry = Entry;
+    u32 CommandCount = 0; // for validating... kaze's shitty geolayouts
+
     while (true) {
         u8 Cmd = Rom.ReadBytes<u8>(ScanEntry);
         u8 Len = GetGeolayoutCmdSize(Rom, ScanEntry);
         
-        if (Cmd == 0x02) {
+        if (Cmd == 0x02 || Cmd == 0x00) {
             u32 NewSegAddr = Rom.ReadBytes<u32>(ScanEntry + 4);
-            WriteGeoLayoutRecursive(GeoDump, Rom, Area, LvlName, NewSegAddr, NewSegAddr, Script);
+            if (ValidateMemAddr(NewSegAddr)) {
+                WriteGeoLayoutRecursive(GeoDump, Rom, Area, LvlName, NewSegAddr, NewSegAddr, Script);
+            }
         }
 
-        if (Cmd == 0x01 || ScanEntry == UINT32_MAX) break;
+        if (Cmd == 0x01 || Cmd == 0x03) break;
         if (Cmd == 0x02 && Rom.ReadBytes<u8>(ScanEntry + 1) == 0) break;
+        if (++CommandCount > 10000 || Rom.ReadBytes<u32>(ScanEntry) == 0x00000000) {
+            printf("Geolayout 0x%x is broken, ignoring export\n", SegAddr);
+            break;
+        }
         ScanEntry += Len;
     }
 
@@ -1059,6 +1091,7 @@ void WriteGeoLayoutRecursive(FILE *GeoDump, N64Rom &Rom, u8 Area, std::string Lv
         fprintf(GeoDump, "const GeoLayout %s_area_%u_geo_%x[] = {\n", LvlName.c_str(), Area, SegAddr);
     }
 
+    CommandCount = 0;
     while (true) {
         u8 Cmd = Rom.ReadBytes<u8>(Entry);
         if (Cmd > 35) {
@@ -1072,10 +1105,14 @@ void WriteGeoLayoutRecursive(FILE *GeoDump, N64Rom &Rom, u8 Area, std::string Lv
             std::string Args = GeoCommandsFunctions[Cmd](Rom, Script, Entry, Area);
             fprintf(GeoDump, "    %s(%s),\n", CmdName.c_str(), Args.c_str());
 
-            if (Cmd == 0x01 || Entry == UINT32_MAX) break;
+            if (Cmd == 0x01 || Cmd == 0x03) break;
             if (Cmd == 0x02 && Rom.ReadBytes<u8>(Entry + 1) == 0) break;
         } else {
             printf("Unimplemented GeoLayout command 0x%x at address 0x%x\n", Cmd, Entry);
+            break;
+        }
+        if (++CommandCount > 10000 || Rom.ReadBytes<u32>(Entry) == 0x00000000) {
+            printf("Geolayout 0x%x is broken, ignoring export\n", SegAddr);
             break;
         }
         Entry += Len;

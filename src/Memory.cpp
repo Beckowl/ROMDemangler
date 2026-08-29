@@ -70,7 +70,7 @@ std::string GetLabelFromMap(u32 Address) {
 }
 
 bool ValidateMemAddr(u32 Address) {
-    s32 Bank = Address >> 24;
+    u32 Bank = Address >> 24;
     if (Bank > (MAX_SEGMENT - 1)) {
         return false;
     }

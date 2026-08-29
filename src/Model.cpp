@@ -104,57 +104,40 @@ const char *F3D_AC(enum F3DCCPart Part, u16 Element) {
     return "0";
 }
 
-struct TextureState {
-    u32 LastTimgAddr = 0;
-    u32 LastLoadedPalette = 0;
-    u32 LastLoadedPaletteSeg = 0;
-    u32 CurrentLoadBitDepth = 16;
-    u32 LastLoadBytes = 0;
-    F3DTexture ActiveTiles[8] = {};
-
-    void Reset() {
-        LastTimgAddr = 0;
-        LastLoadedPalette = 0;
-        LastLoadedPaletteSeg = 0;
-        CurrentLoadBitDepth = 16;
-        LastLoadBytes = 0;
-        for (s32 I = 0; I < 8; I++) {
-            ActiveTiles[I] = {};
-            ActiveTiles[I].Tile = I;
-            ActiveTiles[I].ImgType = F3D_IMG_RGBA;
-            ActiveTiles[I].BitDepth = 16;
-        }
+F3DTexture &GetCurrTex(std::vector<F3DTexture> &Textures) {
+    if (Textures.empty()) {
+        F3DTexture Tex = {};
+        Tex.TextureSeg = 0;
+        Tex.Texture = 0;
+        Tex.Tile = 0xFF;
+        Tex.ImgType = F3D_IMG_RGBA;
+        Tex.BitDepth = 16;
+        Tex.Length = 0;
+        Tex.Width = 0;
+        Tex.Height = 0;
+        Tex.Palette = 0;
+        Tex.PaletteSeg = 0;
+        Textures.push_back(Tex);
     }
-};
-
-static TextureState GlobalTexState;
+    return Textures.back();
+}
 
 inline void PushActiveTextures(std::vector<F3DTexture> &Textures) {
-    for (int T = 0; T < 8; T++) {
-        if (T == G_TX_LOADTILE) continue;
-
-        F3DTexture &Tex = GlobalTexState.ActiveTiles[T];
-        if (Tex.Texture != 0 && Tex.Width > 0 && Tex.Height > 0) {
-            if (Tex.ImgType == F3D_IMG_CI && Tex.Palette == 0) {
-                Tex.Palette = GlobalTexState.LastLoadedPalette;
-                Tex.PaletteSeg = GlobalTexState.LastLoadedPaletteSeg;
-            }
-
-            bool Exists = false;
-            for (const auto &Existing : Textures) {
-                if (Existing.TextureSeg == Tex.TextureSeg && Existing.Tile == Tex.Tile) {
-                    Exists = true;
-                    break;
-                }
-            }
-            if (!Exists) {
-                Textures.push_back(Tex);
-            }
+    if (!Textures.empty()) {
+        F3DTexture &Cur = Textures.back();
+        if (Cur.Texture != 0) {
+            F3DTexture Cpy = Cur;
+            Cpy.Texture = 0;
+            Cpy.TextureSeg = 0;
+            Cpy.Length = 0;
+            Textures.push_back(Cpy);
         }
     }
 }
 
 void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd, bool Write, bool IsActor = false, Actor *Act = nullptr, FILE *ModelDump = nullptr, std::string LvlName="", u8 Area=0) {
+    static u32 CurrentLoadBitDepth = 16;
+
     if (!Write) {
         auto GetBitDepthFromSize = [](u32 size) {
             switch (size) {
@@ -168,88 +151,72 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
 
         switch (Cmd) {
             case G_SETTIMG: {
+                // if we already have tex, dont override
+                // hopefully this doesnt break aynthing :pray:
+                if (!Textures.empty()) {
+                    F3DTexture &Cur = Textures.back();
+                    if (Cur.Texture != 0 && Cur.Texture != W1 && Cur.Texture != Cur.Palette) {
+                        PushActiveTextures(Textures);
+                    }
+                }
+
                 u32 ImgType = C0(21, 3);
                 u32 BitDepth = GetBitDepthFromSize(C0(19, 2));
 
-                GlobalTexState.CurrentLoadBitDepth = BitDepth;
-                GlobalTexState.LastTimgAddr = W1;
+                CurrentLoadBitDepth = BitDepth;
+
+                F3DTexture &Tex = GetCurrTex(Textures);
+                Tex.TextureSeg = W1;
+                Tex.Texture = W1;
+
+                if (Tex.Tile == 0xFF) {
+                    Tex.ImgType = (F3DImageType)ImgType;
+                    Tex.BitDepth = BitDepth;
+                }
                 break;
             }
             case G_SETTILE: {
+                F3DTexture &Tex = GetCurrTex(Textures);
                 u32 Tile = C1(24, 3);
-                if (Tile < 8) {
-                    F3DTexture &Tex = GlobalTexState.ActiveTiles[Tile];
-                    Tex.Tile = Tile;
-                    if (Tile != G_TX_LOADTILE) {
-                        Tex.ImgType = (F3DImageType)C0(21, 3);
-                        Tex.BitDepth = GetBitDepthFromSize(C0(19, 2));
-                        Tex.TextureSeg = GlobalTexState.LastTimgAddr;
-                        Tex.Texture = GlobalTexState.LastTimgAddr;
 
-                        if (Tex.ImgType == F3D_IMG_CI) {
-                            u32 PalIdx = C1(20, 4);
-                            u32 ByteOffset = (Tex.BitDepth == 4) ? (PalIdx * 32) : 0;
+                Tex.Tile = Tile;
+                if (Tile != G_TX_LOADTILE) {
+                    Tex.ImgType = (F3DImageType)C0(21, 3);
+                    Tex.BitDepth = GetBitDepthFromSize(C0(19, 2));
+                }
+                break;
+            }
+            case G_LOADBLOCK: {
+                F3DTexture &Tex = GetCurrTex(Textures);
+                u32 Texels = C1(12, 12);
+                u32 Bytes = ((Texels + 1) * CurrentLoadBitDepth) / 8;
+                if (Bytes > Tex.Length) Tex.Length = Bytes;
+                break;
+            }
+            case G_SETTILESIZE: {
+                F3DTexture &Tex = GetCurrTex(Textures);
+                u32 Tile = C1(24, 3);
 
-                            Tex.Palette = GlobalTexState.LastLoadedPalette + ByteOffset;
-                            Tex.PaletteSeg = GlobalTexState.LastLoadedPaletteSeg + ByteOffset;
-                        }
+                if (Tile != G_TX_LOADTILE) {
+                    u16 W = (u16)(((C1(12, 12) - C0(12, 12)) >> 2) + 1);
+                    u16 H = (u16)(((C1(0, 12) - C0(0, 12)) >> 2) + 1);
 
-                        if (GlobalTexState.LastLoadBytes > Tex.Length) {
-                            Tex.Length = GlobalTexState.LastLoadBytes;
-                        }
+                    if (W > 0 && W <= 1024 && H > 0 && H <= 1024) {
+                        Tex.Width = W;
+                        Tex.Height = H;
                     }
                 }
                 break;
             }
             case G_LOADTLUT: {
-                GlobalTexState.LastLoadedPalette = GlobalTexState.LastTimgAddr;
-                GlobalTexState.LastLoadedPaletteSeg = GlobalTexState.LastTimgAddr;
-
-                u32 Tile = C1(24, 3);
-                if (Tile < 8) {
-                    F3DTexture &Tex = GlobalTexState.ActiveTiles[Tile];
-                    Tex.Palette = GlobalTexState.LastTimgAddr;
-                    Tex.PaletteSeg = GlobalTexState.LastTimgAddr;
-                }
-                break;
-            }
-            case G_LOADBLOCK: {
-                u32 Texels = C1(12, 12);
-                u32 Bytes = ((Texels + 1) * GlobalTexState.CurrentLoadBitDepth) / 8;
-                GlobalTexState.LastLoadBytes = Bytes;
-
-                u32 Tile = C1(24, 3);
-                if (Tile < 8) {
-                    F3DTexture &Tex = GlobalTexState.ActiveTiles[Tile];
-                    Tex.TextureSeg = GlobalTexState.LastTimgAddr;
-                    Tex.Texture = GlobalTexState.LastTimgAddr;
-                    if (Bytes > Tex.Length) Tex.Length = Bytes;
-                }
-                break;
-            }
-            case G_SETTILESIZE: {
-                u32 Tile = C1(24, 3);
-                if (Tile < 8) {
-                    F3DTexture &Tex = GlobalTexState.ActiveTiles[Tile];
-                    if (Tile != G_TX_LOADTILE) {
-                        u16 W = (u16)(((C1(12, 12) - C0(12, 12)) >> 2) + 1);
-                        u16 H = (u16)(((C1(0, 12) - C0(0, 12)) >> 2) + 1);
-
-                        if (W > 0 && W <= 1024 && H > 0 && H <= 1024) {
-                            Tex.Width = W;
-                            Tex.Height = H;
-                        }
-                    }
-                    if (Tex.Texture == 0) {
-                        Tex.TextureSeg = GlobalTexState.LastTimgAddr;
-                        Tex.Texture = GlobalTexState.LastTimgAddr;
-                    }
-                }
+                F3DTexture &Tex = GetCurrTex(Textures);
+                Tex.Palette = Tex.Texture;
+                Tex.PaletteSeg = Tex.TextureSeg;
                 break;
             }
         }
         return;
-    } 
+    }
     
     auto GetPlaceHolderName = [LvlName, Area, IsActor, Act](void) {
         return IsActor ? Act->Name : std::format("{}_{}", LvlName, Area);
@@ -257,8 +224,11 @@ void ParseRDPCommands(std::vector<F3DTexture> &Textures, u32 W0, u32 W1, u8 Cmd,
 
     switch (Cmd) {
         case G_SETTIMG:
-            fprintf(ModelDump, "    gsDPSetTextureImage(%u, %u, 1, %s_texture_0x%x),\n", 
-                    C0(21,3), C0(19,2), GetPlaceHolderName().c_str(), W1);
+            if (ValidateMemAddr(W1)) {
+                fprintf(ModelDump, "    gsDPSetTextureImage(%u, %u, 1, %s_texture_0x%x),\n", C0(21,3), C0(19,2), GetPlaceHolderName().c_str(), W1);
+            } else {
+                fprintf(ModelDump, "    // gsDPSetTextureImage(%u, %u, 1, %s_texture_0x%x),\n", C0(21,3), C0(19,2), GetPlaceHolderName().c_str(), W1);
+            }
             break;
         case G_SETTILE:
             fprintf(ModelDump, "    gsDPSetTile(%u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u),\n", 
@@ -323,10 +293,10 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList, std::vector<F3DVert
             if (Cmd == (u8)G_ENDDL) break;
             
             switch (Cmd) {
-                case G_VTX: 
+                case G_VTX:
                     Vertices.push_back({ W1, W1, (C0(0, 16)) / 16 }); 
                     break;
-                case G_MOVEMEM: 
+                case G_MOVEMEM:
                     (C0(16, 8) == 0x88 ? Ambients : Lights).push_back({ W1, W1 }); 
                     break;
                 case G_DL: {
@@ -347,10 +317,10 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList, std::vector<F3DVert
             if (Cmd == G_ENDDL_F3DEX2) break;
             
             switch (Cmd) {
-                case G_VTX_F3DEX2: 
+                case G_VTX_F3DEX2:
                     Vertices.push_back({ W1, W1, C0(12, 8) }); 
                     break;
-                case G_MOVEMEM_F3DEX2: 
+                case G_MOVEMEM_F3DEX2:
                     (((C0(8, 8) * 8) / 24 - 2) == 1 ? Ambients : Lights).push_back({ W1, W1 }); 
                     break;
                 case G_DL_F3DEX2: {
@@ -364,7 +334,7 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList, std::vector<F3DVert
                     break;
                 }
                 case G_TRI1_F3DEX2:
-                case G_TRI2_F3DEX2: 
+                case G_TRI2_F3DEX2:
                     PushActiveTextures(Textures);
                     break;
             }
@@ -372,10 +342,10 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList, std::vector<F3DVert
             if (Cmd == (u8)G_ENDDL) break;
             
             switch (Cmd) {
-                case G_VTX: 
+                case G_VTX:
                     Vertices.push_back({ W1, W1, C0(10, 6) }); 
                     break;
-                case G_MOVEMEM: 
+                case G_MOVEMEM:
                     (C0(16, 8) == 0x88 ? Ambients : Lights).push_back({ W1, W1 }); 
                     break;
                 case G_DL: {
@@ -389,7 +359,7 @@ void ParseDisplayListRecursive(N64Rom &Rom, u32 DisplayList, std::vector<F3DVert
                     break;
                 }
                 case G_TRI2_F3DEX:
-                case (u8)G_TRI1: 
+                case (u8)G_TRI1:
                     PushActiveTextures(Textures);
                     break;
             }
@@ -430,7 +400,6 @@ std::string ConvertGeoMode(N64Rom &Rom, u32 Flags) {
 }
 
 void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, u8 Area, const char *FilePath, bool IsActor, Actor *Act) {
-    GlobalTexState.Reset();
     FILE *ModelDump = fopen(FilePath, "w");
 
     auto GetPlaceHolderName = [LvlName, Area, IsActor, Act](void) {
@@ -565,7 +534,11 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, 
 
                 switch(Cmd) {
                     case G_VTX:
-                        fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(0,16)/16, C0(16,4));
+                        if (ValidateMemAddr(W1)) {
+                            fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(0,16)/16, C0(16,4));
+                        } else {
+                            fprintf(ModelDump, "    // gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(0,16)/16, C0(16,4));
+                        }
                         break;
                     case (u8)G_TRI1: {
                         u32 NextW0 = Rom.ReadBytes<u32>(Entry + 8);
@@ -604,7 +577,11 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, 
 
                 switch(Cmd) {
                     case G_VTX_F3DEX2:
-                        fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(12, 8), (C0(1, 7) - C0(12, 8)));
+                        if (ValidateMemAddr(W1)) {
+                            fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(12, 8), (C0(1, 7) - C0(12, 8)));
+                        } else {
+                            fprintf(ModelDump, "    // gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(12, 8), (C0(1, 7) - C0(12, 8)));
+                        }
                         break;
                     case G_TRI1_F3DEX2:
                         fprintf(ModelDump, "    gsSP1Triangle(%u, %u, %u, 0),\n", C0(16, 8) / 2, C0(8, 8) / 2, C0(0, 8) / 2);
@@ -634,7 +611,11 @@ void ExportModels(N64Rom &Rom, LevelScript &Script, const std::string &LvlName, 
 
                 switch(Cmd) {
                     case G_VTX:
-                        fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(10,6), C0(16, 8) / 2);
+                        if (ValidateMemAddr(W1)) {
+                            fprintf(ModelDump, "    gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(10,6), C0(16, 8) / 2);
+                        } else {
+                            fprintf(ModelDump, "    // gsSPVertex(%s_vertex_0x%x, %u, %u),\n", PlaceHolderName, W1, C0(10,6), C0(16, 8) / 2);
+                        }
                         break;
                     case (u8)G_TRI1:
                         fprintf(ModelDump, "    gsSP1Triangle(%u, %u, %u, 0),\n", C1(16, 8) / 2, C1(8, 8) / 2, C1(0, 8) / 2);

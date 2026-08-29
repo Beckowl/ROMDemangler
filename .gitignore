@@ -6,5 +6,6 @@
 *.json
 build/
 .vscode/
+!gui/*
 # clangd stuff
 compile_commands.json

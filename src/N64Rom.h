@@ -99,14 +99,26 @@ public:
             return Buf;
         }
 
-        if (Bank == 0 && ExportSegment0 && Seg0AsRAM) {
-            T Buf{};
-            size_t RealSize = sizeof(T);
-            memcpy(&Buf, RAM + Offset, RealSize);
-            if (RealSize > 1) {
-                Buf = SwapEndian(Buf);
+        if (Bank == 0) {
+            if (ExportSegment0) {
+                if (Seg0AsRAM) {
+                    T Buf{};
+                    size_t RealSize = sizeof(T);
+                    memcpy(&Buf, RAM + Offset, RealSize);
+                    if (RealSize > 1) {
+                        Buf = SwapEndian(Buf);
+                    }
+                    return Buf;
+                }
+            } else {
+                if (Offset > 0x400000 and Offset < 0x420000) {
+                    Offset = 0x1200000 + (SegAddr & 0xFFFFF);
+                } else {
+                    if (Offset > 0x5F0000 and Offset < 0x620000) {
+                        Offset += 0x1E0000;
+                    }
+                }
             }
-            return Buf;
         }
 
         return ReadBytesPhysical<T>(Offset);

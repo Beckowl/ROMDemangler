@@ -19,7 +19,7 @@ SOURCES := $(wildcard $(addsuffix /*.cpp,$(DIRECTORIES)))
 
 OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(SOURCES))
 
-all: $(BUILD_DIR) $(BUILD_DIR)/$(TARGET)
+all: $(BUILD_DIR) $(BUILD_DIR)/$(TARGET) copyFiles
 
 $(BUILD_DIR)/$(TARGET): $(OBJECTS)
 	$(CXX) $(OBJECTS) -o $@ $(LDFLAGS)
@@ -30,7 +30,11 @@ $(BUILD_DIR)/%.o: %.cpp
 
 $(BUILD_DIR): symbolMap.json
 	mkdir -p $(BUILD_DIR)
-	cp symbolMap.json build/symbolMap.json
+
+copyFiles:
+	cp symbolMap.json $(BUILD_DIR)/symbolMap.json
+	cp ROMDemanglerGUI.py $(BUILD_DIR)/ROMDemanglerGUI.py
+	cp -r gui/ $(BUILD_DIR)/
 
 clean:
 	rm -rf $(BUILD_DIR)
@@ -38,4 +42,4 @@ clean:
 symbolMap.json: sm64.us.map tools/gen_symbol_map.py
 	python3 tools/gen_symbol_map.py sm64.us.map symbolMap.json
 
-.PHONY: all clean
+.PHONY: all clean copyFiles

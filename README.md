@@ -1,21 +1,40 @@
 # ROM Demangler
-A tool in made in C++ that allows you to export data from SM64 ROMs to a sm64coopdx romhack.
+
+A tool made in C++ that allows you to export data from SM64 ROMs to a sm64coopdx romhack.
 
 # How to Use
-Run the tool via your command line interface. Depending on your operating system, the executable will be ./ROMDemangler.exe for Windows or ./ROMDemangler for Linux/macOS.
 
-Command Options:
+## Terminal
 
---rom <file>: Specify the target ROM file (e.g., --rom name.z64).
+Run the tool via your command line interface. Depending on your operating system, the executable will be `./ROMDemangler.exe` for Windows or `./ROMDemangler` for Linux/macOS.
 
---levels <list>: Choose the levels to export. You can specify a single level (e.g., --levels 2) or a comma-separated list (e.g., --levels 2,3,5).
+### Command Options:
 
---actors <type>: Define which actors to export. Valid options are all, custom, or vanilla (e.g., --actors all).
+`--rom <file>`: Specify the target ROM file (e.g., `--rom name.z64`).
+
+`--levels <list>`: Choose the levels to export. You can specify a single level (e.g., `--levels 2`) or a comma-separated list (e.g., `--levels 2,3,5`).
+
+`--actors <type>`: Define which actors to export. Valid options are `all`, `custom`, or `vanilla` (e.g., `--actors all`).
 
 --custom-symbols <file>: Path to a JSON symbol file that overrides entries from symbolMap.json. Useful for romhacks that rename or add symbols (e.g., --custom-symbols myhack_symbols.json).
 
-Example Usage:
-`./ROMDemangler.exe --rom myhack.z64 --levels 2,3,5 --actors custom`
+### Example Usage:
+
+`
+./ROMDemangler.exe --rom myhack.z64 --levels 2,3,5 --actors custom`
+
+## GUI
+
+Install the required dependency:
+
+`pip install PyQt6`
+
+Run the GUI (Or just open the file with explorer) :
+
+`python ROMDemanglerGUI.py`
+
+The GUI provides a graphical interface for configuring and running ROM Demangler without using a terminal:
+![alt text](gui/image.png)
 
 # Credits:
 - [stb_image_write](https://github.com/nothings/stb/blob/master/stb_image_write.h) by [nothings](https://github.com/nothings) - Used for exporting textures

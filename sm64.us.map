@@ -5855,7 +5855,7 @@ Linker script and memory map
  .data          0x0f000000      0xb40 build/us/actors/common0_geo.o
                 0x0f000000                blue_coin_switch_geo
                 0x0f000020                test_platform_geo
-                0x0f000028                dAmpGeo
+                0x0f000028                amp_geo
                 0x0f0001a8                cannon_base_geo
                 0x0f0001c0                cannon_barrel_geo
                 0x0f0001d8                chuckya_geo
@@ -5961,8 +5961,8 @@ Linker script and memory map
                 0x130000f8                bhvPurpleParticle
                 0x13000118                bhvGiantPole
                 0x13000144                bhvPoleGrabbing
-                0x13000174                bhvTHIHugeIslandTop
-                0x13000194                bhvTHITinyIslandTop
+                0x13000174                bhvThiHugeIslandTop
+                0x13000194                bhvThiTinyIslandTop
                 0x130001ac                bhvCapSwitchBase
                 0x130001cc                bhvCapSwitch
                 0x130001f4                bhvKingBobomb
@@ -5988,12 +5988,12 @@ Linker script and memory map
                 0x130005b4                bhvRotatingPlatform
                 0x130005d8                bhvTower
                 0x13000600                bhvBulletBillCannon
-                0x13000624                bhvWFBreakableWallRight
-                0x13000638                bhvWFBreakableWallLeft
+                0x13000624                bhvWfBreakableWallRight
+                0x13000638                bhvWfBreakableWallLeft
                 0x1300066c                bhvKickableBoard
                 0x130006a4                bhvTowerDoor
                 0x130006d8                bhvRotatingCounterClockwise
-                0x130006e0                bhvWFRotatingWoodenPlatform
+                0x130006e0                bhvWfRotatingWoodenPlatform
                 0x13000708                bhvKoopaShellUnderwater
                 0x13000720                bhvExitPodiumWarp
                 0x1300075c                bhvFadingWarp
@@ -6027,12 +6027,12 @@ Linker script and memory map
                 0x13000bc8                bhvThwomp2
                 0x13000c04                bhvTumblingBridgePlatform
                 0x13000c28                bhvTumblingBridge
-                0x13000c44                bhvBBHTumblingBridge
-                0x13000c64                bhvLLLTumblingBridge
+                0x13000c44                bhvBbhTumblingBridge
+                0x13000c64                bhvLllTumblingBridge
                 0x13000c84                bhvFlame
                 0x13000cc8                bhvAnotherElavator
-                0x13000cfc                bhvRRElevatorPlatform
-                0x13000d30                bhvHMCElevatorPlatform
+                0x13000cfc                bhvRrElevatorPlatform
+                0x13000d30                bhvHmcElevatorPlatform
                 0x13000d6c                bhvWaterMist
                 0x13000d98                bhvBreathParticleSpawner
                 0x13000db4                bhvBreakBoxTriangle
@@ -6049,15 +6049,15 @@ Linker script and memory map
                 0x13000f14                bhvUkikiCageChild
                 0x13000f2c                bhvUkikiCageStar
                 0x13000f48                bhvUkikiCage
-                0x13000f9c                bhvBitFSSinkingPlatforms
-                0x13000fc8                bhvBitFSSinkingCagePlatform
+                0x13000f9c                bhvBitfsSinkingPlatforms
+                0x13000fc8                bhvBitfsSinkingCagePlatform
                 0x13001000                bhvDDDMovingPole
-                0x13001030                bhvBitFSTiltingInvertedPyramid
+                0x13001030                bhvBitfsTiltingInvertedPyramid
                 0x13001064                bhvSquishablePlatform
                 0x13001098                bhvCutOutObject
                 0x130010a8                bhvBetaMovingFlamesSpawn
                 0x130010b8                bhvBetaMovingFlames
-                0x130010d8                bhvRRRotatingBridgePlatform
+                0x130010d8                bhvRrRotatingBridgePlatform
                 0x13001108                bhvFlamethrower
                 0x13001124                bhvFlamethrowerFlame
                 0x13001168                bhvBouncingFireball
@@ -6070,9 +6070,9 @@ Linker script and memory map
                 0x13001298                bhvBetaFishSplashSpawner
                 0x130012b4                bhvSpindrift
                 0x130012f4                bhvTowerPlatformGroup
-                0x13001318                bhvWFSlidingTowerPlatform
-                0x13001340                bhvWFElevatorTowerPlatform
-                0x13001368                bhvWFSolidTowerPlatform
+                0x13001318                bhvWfSlidingTowerPlatform
+                0x13001340                bhvWfElevatorTowerPlatform
+                0x13001368                bhvWfSolidTowerPlatform
                 0x13001390                bhvLeafParticleSpawner
                 0x130013a8                bhvTreeSnow
                 0x130013c4                bhvTreeLeaf
@@ -6089,7 +6089,7 @@ Linker script and memory map
                 0x13001518                bhvPushableMetalBox
                 0x13001548                bhvHeaveHo
                 0x130015a4                bhvHeaveHoThrowMario
-                0x130015c0                bhvCCMTouchedStarSpawn
+                0x130015c0                bhvCcmTouchedStarSpawn
                 0x130015e4                bhvUnusedPoundablePlatform
                 0x13001608                bhvBetaTrampolineTop
                 0x13001634                bhvBetaTrampolineSpring
@@ -6131,28 +6131,28 @@ Linker script and memory map
                 0x13001c8c                bhvClockHourHand
                 0x13001cb0                bhvMacroUkiki
                 0x13001d0c                bhvStub1D0C
-                0x13001d14                bhvLLLRotatingHexagonalPlatform
-                0x13001d40                bhvLLLSinkingRockBlock
+                0x13001d14                bhvLllRotatingHexagonalPlatform
+                0x13001d40                bhvLllSinkingRockBlock
                 0x13001d70                bhvStub1D70
-                0x13001d78                bhvLLLMovingOctagonalMeshPlatform
+                0x13001d78                bhvLllMovingOctagonalMeshPlatform
                 0x13001da4                bhvSnowBall
-                0x13001da8                bhvLLLRotatingBlockWithFireBars
-                0x13001dcc                bhvLLLRotatingHexFlame
-                0x13001e04                bhvLLLWoodPiece
-                0x13001e30                bhvLLLFloatingWoodBridge
+                0x13001da8                bhvLllRotatingBlockWithFireBars
+                0x13001dcc                bhvLllRotatingHexFlame
+                0x13001e04                bhvLllWoodPiece
+                0x13001e30                bhvLllFloatingWoodBridge
                 0x13001e4c                bhvVolcanoFlames
-                0x13001e6c                bhvLLLRotatingHexagonalRing
-                0x13001e94                bhvLLLSinkingRectangularPlatform
-                0x13001ec4                bhvLLLSinkingSquarePlatforms
-                0x13001ef8                bhvLLLTiltingInvertedPyramid
+                0x13001e6c                bhvLllRotatingHexagonalRing
+                0x13001e94                bhvLllSinkingRectangularPlatform
+                0x13001ec4                bhvLllSinkingSquarePlatforms
+                0x13001ef8                bhvLllTiltingInvertedPyramid
                 0x13001f30                bhvUnused1F30
                 0x13001f3c                bhvKoopaShell
                 0x13001f68                bhvKoopaShellFlame
                 0x13001f90                bhvToxBox
                 0x13001fbc                bhvPiranhaPlant
-                0x13002018                bhvLLLHexagonalMesh
-                0x13002038                bhvLLLBowserPuzzlePiece
-                0x13002068                bhvLLLBowserPuzzle
+                0x13002018                bhvLllHexagonalMesh
+                0x13002038                bhvLllBowserPuzzlePiece
+                0x13002068                bhvLllBowserPuzzle
                 0x13002088                bhvTuxiesMother
                 0x130020d8                bhvPenguinBaby
                 0x130020e0                bhvUnused20E0
@@ -6161,8 +6161,8 @@ Linker script and memory map
                 0x1300214c                bhvFewBlueFishSpawner
                 0x1300215c                bhvFishSpawner
                 0x13002178                bhvFish
-                0x13002194                bhvWDWExpressElevator
-                0x130021c0                bhvWDWExpressElevatorPlatform
+                0x13002194                bhvWdwExpressElevator
+                0x130021c0                bhvWdwExpressElevatorPlatform
                 0x130021e4                bhvChirpChirp
                 0x130021f4                bhvChirpChirpUnused
                 0x1300220c                bhvBub
@@ -6174,7 +6174,7 @@ Linker script and memory map
                 0x13002308                bhvBowsersSub
                 0x13002338                bhvSushiShark
                 0x13002388                bhvSushiSharkCollisionChild
-                0x130023a4                bhvJRBSlidingBox
+                0x130023a4                bhvJrbSlidingBox
                 0x130023d0                bhvShipPart3
                 0x130023ec                bhvInSunkenShip3
                 0x1300241c                bhvSunkenShipPart
@@ -6208,7 +6208,7 @@ Linker script and memory map
                 0x13002804                bhvGhostHuntBoo
                 0x1300286c                bhvHiddenStaircaseStep
                 0x13002898                bhvBooStaircase
-                0x130028cc                bhvBBHTiltingTrapPlatform
+                0x130028cc                bhvBbhTiltingTrapPlatform
                 0x130028fc                bhvHauntedBookshelf
                 0x1300292c                bhvMeshElevator
                 0x13002968                bhvMerryGoRound
@@ -6317,22 +6317,22 @@ Linker script and memory map
                 0x13003868                bhvCelebrationStar
                 0x13003888                bhvCelebrationStarSparkle
                 0x130038b0                bhvStarKeyCollectionPuffSpawner
-                0x130038d0                bhvLLLDrawbridgeSpawner
-                0x130038e8                bhvLLLDrawbridge
+                0x130038d0                bhvLllDrawbridgeSpawner
+                0x130038e8                bhvLllDrawbridge
                 0x13003910                bhvSmallBomp
                 0x13003940                bhvLargeBomp
-                0x13003970                bhvWFSlidingPlatform
+                0x13003970                bhvWfSlidingPlatform
                 0x130039a0                bhvMoneybag
                 0x130039d4                bhvMoneybagHidden
                 0x13003a08                bhvPitBowlingBall
                 0x13003a30                bhvFreeBowlingBall
                 0x13003a58                bhvBowlingBall
-                0x13003a80                bhvTTMBowlingBallSpawner
+                0x13003a80                bhvTtmBowlingBallSpawner
                 0x13003aa4                bhvBoBBowlingBallSpawner
-                0x13003ac8                bhvTHIBowlingBallSpawner
-                0x13003ae0                bhvRRCruiserWing
+                0x13003ac8                bhvThiBowlingBallSpawner
+                0x13003ae0                bhvRrCruiserWing
                 0x13003b00                bhvSpindel
-                0x13003b30                bhvSSLMovingPyramidWall
+                0x13003b30                bhvSslMovingPyramidWall
                 0x13003b60                bhvPyramidElevator
                 0x13003b98                bhvPyramidElevatorTrajectoryMarkerBall
                 0x13003bb4                bhvPyramidTop
@@ -6362,9 +6362,9 @@ Linker script and memory map
                 0x13003ee4                bhvBowserCourseRedCoinStar
                 0x13003efc                bhvHiddenStar
                 0x13003f1c                bhvHiddenStarTrigger
-                0x13003f40                bhvTTMRollingLog
-                0x13003f78                bhvLLLVolcanoFallingTrap
-                0x13003fa4                bhvLLLRollingLog
+                0x13003f40                bhvTtmRollingLog
+                0x13003f78                bhvLllVolcanoFallingTrap
+                0x13003fa4                bhvLllRollingLog
                 0x13003fdc                bhv1UpWalking
                 0x13004010                bhv1UpRunningAway
                 0x13004044                bhv1UpSliding
@@ -6380,16 +6380,16 @@ Linker script and memory map
                 0x13004218                bhvBreakableBoxSmall
                 0x13004244                bhvSlidingSnowMound
                 0x13004270                bhvSnowMoundSpawn
-                0x13004284                bhvWDWSquareFloatingPlatform
-                0x130042b4                bhvWDWRectangularFloatingPlatform
-                0x130042e4                bhvJRBFloatingPlatform
+                0x13004284                bhvWdwSquareFloatingPlatform
+                0x130042b4                bhvWdwRectangularFloatingPlatform
+                0x130042e4                bhvJrbFloatingPlatform
                 0x13004314                bhvArrowLift
                 0x13004348                bhvOrangeNumber
                 0x13004370                bhvMantaRay
                 0x130043a0                bhvFallingPillar
                 0x130043c4                bhvFallingPillarHitbox
                 0x130043e0                bhvPillarBase
-                0x13004400                bhvJRBFloatingBox
+                0x13004400                bhvJrbFloatingBox
                 0x1300442c                bhvDecorativePendulum
                 0x1300444c                bhvTreasureChestsShip
                 0x13004470                bhvTreasureChestsJRB
