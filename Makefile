@@ -28,15 +28,18 @@ $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(BUILD_DIR):
+$(BUILD_DIR): symbolMap.json
 	mkdir -p $(BUILD_DIR)
 
 copyFiles:
-	cp sm64.us.map $(BUILD_DIR)/sm64.us.map
+	cp symbolMap.json $(BUILD_DIR)/symbolMap.json
 	cp ROMDemanglerGUI.py $(BUILD_DIR)/ROMDemanglerGUI.py
 	cp -r gui/ $(BUILD_DIR)/
 
 clean:
 	rm -rf $(BUILD_DIR)
+
+symbolMap.json: sm64.us.map tools/gen_symbol_map.py
+	python3 tools/gen_symbol_map.py sm64.us.map symbolMap.json
 
 .PHONY: all clean copyFiles

@@ -1,57 +1,63 @@
 #include "Memory.h"
 #include "Decompress.h"
 #include "Main.h"
+#include "json.hpp"
+#include <cstdlib>
 #include <format>
+#include <fstream>
 #include <unordered_map>
+
+using json = nlohmann::json;
 
 std::vector<u8> SegmentData[MAX_SEGMENT];
 u32 SegmentOffsets[MAX_SEGMENT][2] = {0};
 static std::unordered_map<u32, std::string> SymbolMap;
 
-void InitMemoryMap() {
-    SymbolMap.clear();
-
-    FILE *MapFile = fopen("sm64.us.map", "r");
-    if (!MapFile) {
-        printf("Failed to find SM64 Memory Map, output will not have labels\n");
+static void LoadSymbolMap(const std::string &Path) {
+    std::ifstream File(Path);
+    if (!File.is_open()) {
+        printf("Failed to find custom symbol file %s, skipping\n", Path.c_str());
         return;
     }
 
-    rewind(MapFile);
-
-    char Line[1024];
-    while (fgets(Line, sizeof(Line), MapFile)) {
-        size_t n = strlen(Line);
-        while (n > 0 && (Line[n-1] == '\n' || Line[n-1] == '\r' || isspace((unsigned char)Line[n-1]))) {
-            Line[--n] = '\0';
-        }
-
-        if (n == 0) continue;
-
-        char *Tokens[64];
-        int TCount = 0;
-        char *Token = strtok(Line, " \t");
-        while (Token && TCount < 64) {
-            Tokens[TCount++] = Token;
-            Token = strtok(NULL, " \t");
-        }
-
-        if (TCount == 0) continue;
-
-        std::string Label = Tokens[TCount - 1];
-
-        if (TCount == 2) {
-            for (int i = 0; i < TCount; ++i) {
-                char *End = NULL;
-                unsigned long Val = strtoul(Tokens[i], &End, 16);
-
-                if (End == Tokens[i] || *End != '\0') continue;
-
-                SymbolMap[(u32)Val] = Label;
-            }
-        }
+    json Root;
+    try {
+        File >> Root;
+    } catch (const json::parse_error &Err) {
+        printf("Failed to parse %s: %s\n", Path.c_str(), Err.what());
+        return;
     }
-    fclose(MapFile);
+
+    if (!Root.is_object()) {
+        printf("%s does not contain a JSON object at its root, skipping\n", Path.c_str());
+        return;
+    }
+
+    int Loaded = 0;
+    for (auto &[Key, Value] : Root.items()) {
+        if (!Value.is_string()) continue;
+
+        char *End = NULL;
+        unsigned long Addr = strtoul(Key.c_str(), &End, 16);
+        if (End == Key.c_str() || *End != '\0') continue;
+
+        SymbolMap[(u32)Addr] = Value.get<std::string>();
+        ++Loaded;
+    }
+
+    if (VerbosePrinting) {
+        printf("Loaded %d symbols from %s\n", Loaded, Path.c_str());
+    }
+}
+
+void InitMemoryMap(const std::string &CustomSymbolsPath) {
+    SymbolMap.clear();
+
+    LoadSymbolMap("symbolMap.json");
+
+    if (!CustomSymbolsPath.empty()) {
+        LoadSymbolMap(CustomSymbolsPath);
+    }
 }
 
 std::string GetLabelFromMap(u32 Address) {

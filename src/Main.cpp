@@ -158,6 +158,7 @@ int main(int argc, char** argv) {
         ("fix-collision", "Fix collision geometry", cxxopts::value<bool>())
         ("verbose", "Print more info", cxxopts::value<bool>())
         ("ignore-seg-0", "Don't export stuff from Segment 0", cxxopts::value<bool>())
+        ("custom-symbols", "Path to a JSON symbol file that overrides entries from symbolMap.json (for romhacks with custom symbols)", cxxopts::value<std::string>())
         ("h,help", "Print usage");
 
     auto Result = Options.parse(argc, argv);
@@ -167,10 +168,14 @@ int main(int argc, char** argv) {
     IgnoreSegment0 = Result["ignore-seg-0"].as<bool>();
     CollisionFix = Result["fix-collision"].as<bool>();
     std::string RAMPath;
+    std::string CustomSymbolsPath;
     if (Result.count("actors")) ActorsExport = Result["actors"].as<std::string>();
     if (Result.count("ram")) {
         RAMPath = Result["ram"].as<std::string>();
         ExportSegment0 = true;
+    }
+    if (Result.count("custom-symbols")) {
+        CustomSymbolsPath = Result["custom-symbols"].as<std::string>();
     }
 
     if (Result.count("help") || !Result.count("rom") || !Result.count("levels")) {
@@ -183,7 +188,7 @@ int main(int argc, char** argv) {
 
     N64Rom Rom;
     Rom.OpenFile(RomPath.c_str(), ExportSegment0 ? RAMPath.c_str() : nullptr);
-    InitMemoryMap();
+    InitMemoryMap(CustomSymbolsPath);
 
     std::string GameTypeStr = "ROM is made with ";
 
