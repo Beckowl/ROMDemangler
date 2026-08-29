@@ -29,6 +29,7 @@ jobs:
           update: true
           install: >
             make
+            python3
             mingw-w64-${{ matrix.arch.env }}-gcc
 
       - name: Build
