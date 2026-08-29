@@ -29,7 +29,8 @@ static std::vector<SkyboxTile> GetSkyboxTiles(u32 SegStart, const std::vector<u8
     return Tiles;
 }
 
-static void ExportSkyboxTiles(const std::vector<SkyboxTile>& Tiles, const std::string& Path) {
+static void ExportSkyboxTiles(const std::vector<SkyboxTile>& Tiles) {
+    std::string Path = "output/levels/textures/skybox_tiles/";
     fs::create_directories(Path);
 
     for (const auto& Tile : Tiles) {
@@ -48,8 +49,6 @@ static void ExportPtrList(FILE* File, const std::vector<SkyboxTile>& Tiles, cons
     }
 
     fprintf(File, "const Texture *const %s[] = {\n", SkyboxName.c_str());
-
-    std::vector<SkyboxTile> PtrList(80);
 
     int Rows = Tiles.size() / 8;
 
@@ -80,13 +79,12 @@ bool ExportSkybox(N64Rom& Rom, LevelScript& Script, std::string& SkyboxName) {
     printf("Num skybox tiles: %i\n", NumTiles);
 
     std::vector<SkyboxTile> Tiles = GetSkyboxTiles(0x0A000000, SegData, NumTiles);
+    ExportSkyboxTiles(Tiles);
 
     std::string LevelPath = "output/levels/" + Script.Name + "/";
-    std::string SkyboxTilesPath = "output/levels/textures/skybox_tiles/";
     std::string SkyboxPath = LevelPath + "skybox.inc.c";
 
     fs::create_directories(LevelPath);
-    ExportSkyboxTiles(Tiles, SkyboxTilesPath);
 
     FILE* File = fopen(SkyboxPath.c_str(), "w");
 
