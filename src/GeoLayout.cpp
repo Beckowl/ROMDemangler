@@ -807,7 +807,7 @@ std::string GeoCmdBackground(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Ar
     if (Func) {
         std::string SkyboxName;
 
-        if (ExportSkybox(Rom, Script, SkyboxName)) {
+        if (ExportSkybox(Script, SkyboxName)) {
             OutArgs = std::format("{}, geo_skybox_main", SkyboxName);
         } else {
             OutArgs = std::format("{}, geo_skybox_main", Background);
