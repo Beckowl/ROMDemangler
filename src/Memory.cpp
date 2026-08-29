@@ -80,6 +80,9 @@ bool ValidateMemAddr(u32 Address) {
     if (IgnoreSegment0 && Bank == 0) {
         return false;
     }
+    if (SegmentData[Bank].empty()) {
+        return false;
+    }
     return true;
 }
 
@@ -93,30 +96,40 @@ u32 SegmentedToROM(u32 Addr) {
     return Result;
 }
 
-std::vector<u8> DecompressSegment(N64Rom &Rom, u8 Segment, u32 RomStart, u32 RomEnd) {
-    u8 HeaderMagic[4] = {
-        Rom.ReadBytesPhysical<u8>(RomStart),
-        Rom.ReadBytesPhysical<u8>(RomStart+1),
-        Rom.ReadBytesPhysical<u8>(RomStart+2),
-        Rom.ReadBytesPhysical<u8>(RomStart+3),
+CompressionType GetCompressionType(N64Rom &Rom, u32 RomStart) {
+    std::string HeaderMagic = {
+        static_cast<char>(Rom.ReadBytesPhysical<u8>(RomStart)),
+        static_cast<char>(Rom.ReadBytesPhysical<u8>(RomStart + 1)),
+        static_cast<char>(Rom.ReadBytesPhysical<u8>(RomStart + 2)),
+        static_cast<char>(Rom.ReadBytesPhysical<u8>(RomStart + 3)),
     };
 
-    if (HeaderMagic[0] == 'M' && HeaderMagic[1] == 'I' && HeaderMagic[2] == 'O' && HeaderMagic[3] == '0') {
-        return Compression::DecompressMIO0(Rom, RomStart);
-    } else if (HeaderMagic[0] == 'R' && HeaderMagic[1] == 'N' && HeaderMagic[2] == 'C') {
-        return Compression::DecompressRNC(Rom, RomStart);
-    } else if (HeaderMagic[0] == 'Y' && HeaderMagic[1] == 'A' && HeaderMagic[2] == 'Y' && HeaderMagic[3] == '0') {
-        return Compression::DecompressYAY0(Rom, RomStart);
-    } else {
-        printf("Tried to decompress segment 0x%02x which is not compressed\n", Segment);
-        u32 Size = RomEnd - RomStart;
-        std::vector<u8> SegData;
-        SegData.resize(Size);
-        Rom.ReadBytesPtr<u8>(RomStart, SegData.data(), Size);
-        return SegData;
+    if (HeaderMagic == "MIO0") {
+        return COMPRESSION_MIO0;
+    } else if (HeaderMagic.substr(0, 3) == "RNC") {
+        return COMPRESSION_RNC;
+    } else if (HeaderMagic == "YAY0") {
+        return COMPRESSION_YAY0;
     }
 
-    return {};
+    return COMPRESSION_NONE;
+}
+
+std::vector<u8> DecompressSegment(N64Rom &Rom, u8 Segment, u32 RomStart, u32 RomEnd) {
+    CompressionType Type = GetCompressionType(Rom, RomStart);
+
+    switch (Type) {
+        case COMPRESSION_MIO0: return Compression::DecompressMIO0(Rom, RomStart);
+        case COMPRESSION_RNC: return Compression::DecompressRNC(Rom, RomStart);
+        case COMPRESSION_YAY0: return Compression::DecompressYAY0(Rom, RomStart);
+        default:
+            printf("Tried to decompress segment 0x%02x which is not compressed\n", Segment);
+            u32 Size = RomEnd - RomStart;
+            std::vector<u8> SegData;
+            SegData.resize(Size);
+            Rom.ReadBytesPtr<u8>(RomStart, SegData.data(), Size);
+            return SegData;
+    }
 }
 
 void LoadSegment(N64Rom &Rom, u8 Segment, u32 RomStart, u32 RomEnd, bool Decompress) {

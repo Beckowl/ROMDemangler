@@ -2,6 +2,7 @@
 #include "Actor.h"
 #include "LevelScript.h"
 #include "Memory.h"
+#include "Skybox.h"
 
 std::map<u32, bool> ProcessedGeos;
 
@@ -804,15 +805,15 @@ std::string GeoCmdBackground(N64Rom &Rom, LevelScript &Script, u32 &Start, u8 Ar
     std::string FuncName = "geo_skybox_main";
     std::string OutArgs = "";
     if (Func) {
-        OutArgs = std::format(
-            "{}, {}",
-            Background, FuncName
-        );
+        std::string SkyboxName;
+
+        if (ExportSkybox(Script, SkyboxName)) {
+            OutArgs = std::format("{}, geo_skybox_main", SkyboxName);
+        } else {
+            OutArgs = std::format("{}, geo_skybox_main", Background);
+        }
     } else {
-        OutArgs = std::format(
-            "{}",
-            Background
-        );
+        OutArgs = std::format("{}", Background);
     }
 
     return OutArgs;
