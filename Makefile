@@ -28,11 +28,14 @@ $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(BUILD_DIR):
+$(BUILD_DIR): symbolMap.json
 	mkdir -p $(BUILD_DIR)
-	cp sm64.us.map build/sm64.us.map
+	cp symbolMap.json build/symbolMap.json
 
 clean:
 	rm -rf $(BUILD_DIR)
+
+symbolMap.json: sm64.us.map tools/gen_symbol_map.py
+	python3 tools/gen_symbol_map.py sm64.us.map symbolMap.json
 
 .PHONY: all clean

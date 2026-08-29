@@ -24,7 +24,7 @@ void ExportLua(N64Rom &Rom) {
     for (const auto &MovTexQC : MovingTextures) {
         //force type for now cuz idk how ts works
         u16 Type = 1; /*MovTexQC.Type*/
-        fprintf(LuaDump, "movtexqc_register(\"%s_%u_movtext_%u\", %u, %u, %u)\n", MovTexQC.LvlName.c_str(), MovTexQC.Area, MovTexQC.Index, MovTexQC.LvlID, MovTexQC.Area, Type);
+        fprintf(LuaDump, "movtexqc_register(\"%s_%u_movtex_%u\", %u, %u, %u)\n", MovTexQC.LvlName.c_str(), MovTexQC.Area, MovTexQC.Index, MovTexQC.LvlID, MovTexQC.Area, Type);
     }
     if (SoundExport) {
         fprintf(LuaDump, "\n-- Audio\n");

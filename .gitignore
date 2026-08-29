@@ -3,6 +3,7 @@
 *.m64
 *.png
 *.lua
+*.json
 build/
 .vscode/
 # clangd stuff

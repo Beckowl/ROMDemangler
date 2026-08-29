@@ -1164,8 +1164,8 @@ void ExportAreas(N64Rom &Rom, LevelScript &Script, const std::string &LvlName) {
         std::string ColDumpPath = AreaStrNum + "/collision.inc.c";
         ExportCollision(Rom, I, LvlName, ColSegAddr, Script, ColDumpPath.c_str());
         if (GameType.IsOldBinary()) {
-            std::string MovTextDumpPath = AreaStrNum + "/movtext.inc.c";
-            ExportMovTex(Rom, I, LvlName, Script, MovTextDumpPath.c_str());
+            std::string MovTexDumpPath = AreaStrNum + "/movtext.inc.c";
+            ExportMovTex(Rom, I, LvlName, Script, MovTexDumpPath.c_str());
         }
         std::string ModelDumpPath = AreaStrNum + "/model.inc.c";
         ExportModels(Rom, Script, LvlName, I, ModelDumpPath.c_str());
