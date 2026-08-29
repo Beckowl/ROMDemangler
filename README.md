@@ -16,7 +16,7 @@ Run the tool via your command line interface. Depending on your operating system
 
 `--actors <type>`: Define which actors to export. Valid options are `all`, `custom`, or `vanilla` (e.g., `--actors all`).
 
---custom-symbols <file>: Path to a JSON symbol file that overrides entries from symbolMap.json. Useful for romhacks that rename or add symbols (e.g., --custom-symbols myhack_symbols.json).
+`--custom-symbols <file>`: Path to a JSON symbol file that overrides entries from symbolMap.json. Useful for romhacks that rename or add symbols (e.g., --custom-symbols myhack_symbols.json).
 
 ### Example Usage:
 
