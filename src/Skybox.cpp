@@ -11,7 +11,7 @@ struct SkyboxTile {
 
 static std::vector<SkyboxTile> GetSkyboxTiles(u32 SegAddr) {
     const u32 Bank = SegAddr >> 24;
-    const auto& SegData = SegmentData[Bank];
+    const auto &SegData = SegmentData[Bank];
     
     s32 NumTiles = 8 * ((SegData.size() - 0x140) / 16384);
 
@@ -40,18 +40,18 @@ static std::vector<SkyboxTile> GetSkyboxTiles(u32 SegAddr) {
     return Tiles;
 }
 
-static void ExportSkyboxTiles(const std::vector<SkyboxTile>& Tiles) {
+static void ExportSkyboxTiles(const std::vector<SkyboxTile> &Tiles) {
     std::string Path = "output/levels/textures/skybox_tiles/";
     fs::create_directories(Path);
 
-    for (const auto& Tile : Tiles) {
+    for (const auto &Tile : Tiles) {
         std::string FileName = Path + Tile.Name + ".rgba16.png";
         stbi_write_png(FileName.c_str(), 32, 32, 4, Tile.Texture.data(), 32 * 4);
     }
 }
 
-static void ExportPtrList(FILE* File, const std::vector<SkyboxTile>& Tiles, const std::string& SkyboxName) {
-    for (const auto& Tile : Tiles) {
+static void ExportPtrList(FILE* File, const std::vector<SkyboxTile> &Tiles, const std::string &SkyboxName) {
+    for (const auto &Tile : Tiles) {
         fprintf(File,
             "ALIGNED8 static const Texture %s[] = \"%s\";\n\n",
             Tile.Name.c_str(),
@@ -80,7 +80,7 @@ static void ExportPtrList(FILE* File, const std::vector<SkyboxTile>& Tiles, cons
     fprintf(File, "};\n");
 }
 
-bool ExportSkybox(LevelScript& Script, std::string& SkyboxName) {
+bool ExportSkybox(LevelScript &Script, std::string &SkyboxName) {
     u32 SegAddr = 0x0A000000;
 
     if (!SkyboxExport || !ValidateMemAddr(SegAddr)) {

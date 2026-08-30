@@ -40,7 +40,7 @@ The GUI provides a graphical interface for configuring and running ROM Demangler
 - [stb_image_write](https://github.com/nothings/stb/blob/master/stb_image_write.h) by [nothings](https://github.com/nothings) - Used for exporting textures
 - [cxxopts](https://github.com/jarro2783/cxxopts) by [jarro2783](https://github.com/jarro2783) - Library for parsing CLI arguments
 - [nlohmann/json](https://github.com/nlohmann/json) by [nlohmann](https://github.com/nlohmann) - Library for reading/writing the JSON symbol map
-- [RM2C](https://gitlab.com/scuttlebugraiser/rom-manger-2-c) by [scuttlebugraiser](https://gitlab.com/scuttlebugraiser) - References for scrolling textures and collision fixes
+- [RM2C](https://gitlab.com/scuttlebugraiser/rom-manger-2-c) by [scuttlebugraiser](https://gitlab.com/scuttlebugraiser) - References for scrolling textures, collision fixes and segment2 related stuff
 - [Quad64](https://github.com/DavidSM64/Quad64) by [DavidSM64](https://github.com/DavidSM64) - Per-area bank 0x0E functions
 
 But you might like Isaac's tool more: https://github.com/Isaac0-dev/rom-decomp-64

@@ -80,7 +80,7 @@ bool ValidateMemAddr(u32 Address) {
     if (IgnoreSegment0 && Bank == 0) {
         return false;
     }
-    if (SegmentData[Bank].empty()) {
+    if (SegmentData[Bank].empty() && Bank != 0) {
         return false;
     }
     return true;

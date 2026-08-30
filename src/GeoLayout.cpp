@@ -1075,7 +1075,7 @@ void WriteGeoLayoutRecursive(FILE *GeoDump, N64Rom &Rom, u8 Area, std::string Lv
 
         if (Cmd == 0x01 || Cmd == 0x03) break;
         if (Cmd == 0x02 && Rom.ReadBytes<u8>(ScanEntry + 1) == 0) break;
-        if (++CommandCount > 10000 || Rom.ReadBytes<u32>(ScanEntry) == 0x00000000) {
+        if (++CommandCount > 10000 /*|| Rom.ReadBytes<u32>(ScanEntry) == 0x00000000*/) {
             printf("Geolayout 0x%x is broken, ignoring export\n", SegAddr);
             break;
         }
@@ -1112,7 +1112,7 @@ void WriteGeoLayoutRecursive(FILE *GeoDump, N64Rom &Rom, u8 Area, std::string Lv
             printf("Unimplemented GeoLayout command 0x%x at address 0x%x\n", Cmd, Entry);
             break;
         }
-        if (++CommandCount > 10000 || Rom.ReadBytes<u32>(Entry) == 0x00000000) {
+        if (++CommandCount > 10000/* || Rom.ReadBytes<u32>(Entry) == 0x00000000*/) {
             printf("Geolayout 0x%x is broken, ignoring export\n", SegAddr);
             break;
         }

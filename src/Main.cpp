@@ -3,6 +3,7 @@
 #include "Sound.h"
 #include "Decompress.h"
 #include "Memory.h"
+#include "Segment2.h"
 #include "cxxopts.hpp"
 
 bool VerbosePrinting = false;
@@ -11,6 +12,7 @@ bool SoundExport = false;
 bool TweakExport = false;
 bool CollisionFix = false;
 bool SkyboxExport = false;
+bool TexturesExport = false;
 SM64GameType GameType;
 u32 FoundScriptEntry = 0;
 bool ExportSegment0 = false;
@@ -161,6 +163,7 @@ int main(int argc, char** argv) {
         ("ignore-seg-0", "Don't export stuff from Segment 0", cxxopts::value<bool>())
         ("custom-symbols", "Path to a JSON symbol file that overrides entries from symbolMap.json (for romhacks with custom symbols)", cxxopts::value<std::string>())
         ("skyboxes", "Export Skyboxes", cxxopts::value<bool>())
+        ("textures", "Export Segment2 textures", cxxopts::value<bool>())
         ("h,help", "Print usage");
 
     auto Result = Options.parse(argc, argv);
@@ -170,6 +173,7 @@ int main(int argc, char** argv) {
     IgnoreSegment0 = Result["ignore-seg-0"].as<bool>();
     CollisionFix = Result["fix-collision"].as<bool>();
     SkyboxExport = Result["skyboxes"].as<bool>();
+    TexturesExport = Result["textures"].as<bool>();
     std::string RAMPath;
     std::string CustomSymbolsPath;
     if (Result.count("actors")) ActorsExport = Result["actors"].as<std::string>();
@@ -285,6 +289,7 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (TexturesExport) ExportSeg2Textures(Rom);
     if (SoundExport) ExportSequences(Rom);
     ExportLua(Rom);
     printf("Export done!\n");
