@@ -411,7 +411,7 @@ std::string LvlCommandsName[] = {
     "CMD2D",
     "TERRAIN",
     "ROOMS",
-    "SHOW_DIALOG",
+    "//SHOW_DIALOG",
     "TERRAIN_TYPE",
     "NOP",
     "TRANSITION",
@@ -888,6 +888,8 @@ std::string LvlCmdPlaceObject(N64Rom &Rom, LevelScript &Script, u32 &Start) {
     u32 Bhv = Rom.ReadBytes<u32>(Start + 20, false);
 
     std::string BhvName = GetLabelFromMap(Bhv);
+    std::string OutArgs;
+
     if (GameType.IsOldBinary()) {
         if (BhvName == "RM_Scroll_Texture" || BhvName == "editor_Scroll_Texture" || BhvName == "editor_Scroll_Texture2" || (BhvName == "bhvBetaHoldableObject" && GameType.GetID() == GT_EDITOR)) {
             ScrollTexture Scroll;
@@ -902,18 +904,27 @@ std::string LvlCmdPlaceObject(N64Rom &Rom, LevelScript &Script, u32 &Start) {
 
             Script.ScrollTargets.push_back(Scroll);
 
-            std::string OutArgs = std::format(
+            OutArgs = std::format(
                 "/* Model */ 0x0, /* Speed */ {}, /* Axis */ {}, /* VCount */ {}, 0, /* Type */ {}, /* Cycle */ {}, /* Index */ {:#x}, {}, /* Act */ {}",
                 Scroll.Speed, Scroll.Axis, Scroll.NumVtx,  Scroll.Type, Scroll.Cycle, Scroll.Id, BhvName, Acts
             );
+            
             return OutArgs;
         }
     }
 
-    std::string OutArgs = std::format(
-        "/* Model */ {:#x}, /* Pos */ {}, {}, {}, /* Angle */ {}, {}, {}, /* Param */ {:#x}, /* Behavior */ {}, /* Act */ {}",
-        ModelID, PosX, PosY, PosZ, AngleX, AngleY, AngleZ, BhvParam, BhvName, Acts
-    );
+    if (!BhvName.starts_with("Custom_")) {
+        OutArgs = std::format(
+            "/* Model */ {:#x}, /* Pos */ {}, {}, {}, /* Angle */ {}, {}, {}, /* Param */ {:#x}, /* Behavior */ {}, /* Act */ {}",
+            ModelID, PosX, PosY, PosZ, AngleX, AngleY, AngleZ, BhvParam, BhvName, Acts
+        );
+    } else {
+        OutArgs = std::format(
+            "/* Model */ /* {:#x} */ E_MODEL_ERROR_MODEL, /* Pos */ {}, {}, {}, /* Angle */ {}, {}, {}, /* Param */ {:#x}, /* Behavior */ /* {} */ bhvStaticObject, /* Act */ {}",
+            ModelID, PosX, PosY, PosZ, AngleX, AngleY, AngleZ, BhvParam, BhvName, Acts
+        );
+    }
+
 
     return OutArgs;
 };
