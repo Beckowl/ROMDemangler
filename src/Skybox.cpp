@@ -1,8 +1,8 @@
 #include "Skybox.h"
-#include "memory.h"
+#include "Memory.h"
 #include "stb_image_write.h"
 #include "BinImg.h"
-#include "main.h"
+#include "Main.h"
 
 struct SkyboxTile {
     std::vector<u8> Texture;
@@ -12,7 +12,13 @@ struct SkyboxTile {
 static std::vector<SkyboxTile> GetSkyboxTiles(u32 SegAddr) {
     const u32 Bank = SegAddr >> 24;
     const auto& SegData = SegmentData[Bank];
-    const s32 NumTiles = 8 * ((SegData.size() - 0x140) / 16384);
+    
+    s32 NumTiles = 8 * ((SegData.size() - 0x140) / 16384);
+
+    // small skyboxes have an extra tile after the main image used to pad the ptrlist
+    if (NumTiles < 64) {
+        NumTiles++;
+    }
 
     printf("Num skybox tiles: %i\n", NumTiles);
 
@@ -56,14 +62,19 @@ static void ExportPtrList(FILE* File, const std::vector<SkyboxTile>& Tiles, cons
     fprintf(File, "const Texture *const %s[] = {\n", SkyboxName.c_str());
 
     int Rows = Tiles.size() / 8;
+    int TotalTiles = Rows * 8 + Rows * 2;
 
-    for (int Row = 0; Row < Rows; Row++) {
-        for (int Col = 0; Col < 8; Col++) {
-            fprintf(File, "\t%s,\n", Tiles[Row * 8 + Col].Name.c_str());
+    for (int y = 0; y < Rows; y++) {
+        for (int x = 0; x < 8; x++) {
+            fprintf(File, "\t%s,\n", Tiles[y * 8 + x].Name.c_str());
         }
 
-        fprintf(File, "\t%s,\n", Tiles[Row * 8 + 0].Name.c_str());
-        fprintf(File, "\t%s,\n", Tiles[Row * 8 + 1].Name.c_str());
+        fprintf(File, "\t%s,\n", Tiles[y * 8 + 0].Name.c_str());
+        fprintf(File, "\t%s,\n", Tiles[y * 8 + 1].Name.c_str());
+    }
+
+    for (int i = TotalTiles; i < 80; i++) {
+        fprintf(File, "\t%s,\n", Tiles.back().Name.c_str());
     }
 
     fprintf(File, "};\n");
