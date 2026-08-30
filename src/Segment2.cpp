@@ -33,8 +33,8 @@ void FindAndLoadSegment2(N64Rom &Rom) {
     
     std::unordered_map<u32, u32> Mio0Map;
     for (u32 i = 0; i < Rom.Size - 16; i += 4) {
-        if (Rom.ReadBytes<u32>(i, false) == 0x4D494F30) {
-            u32 UncompSize = Rom.ReadBytes<u32>(i + 4, false);
+        if (Rom.ReadBytesPhysical<u32>(i) == 0x4D494F30) {
+            u32 UncompSize = Rom.ReadBytesPhysical<u32>(i + 4);
             if (UncompSize >= 32768 && UncompSize <= 131072) {
                 Matches.push_back({i, UncompSize});
                 Mio0Map[i] = UncompSize;
@@ -57,7 +57,7 @@ void FindAndLoadSegment2(N64Rom &Rom) {
         u32 ReconstructedAddr = 0;
 
         for (u32 J = ScanStart; J < ScanEnd; ++J) {
-            u32 ScanWord = Rom.ReadBytes<u32>(J * 4, false);
+            u32 ScanWord = Rom.ReadBytesPhysical<u32>(J * 4);
             u32 ScanOp = ScanWord >> 26;
 
             if (ScanOp == 9 || ScanOp == 13) {
