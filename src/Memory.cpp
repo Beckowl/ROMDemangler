@@ -123,7 +123,7 @@ std::vector<u8> DecompressSegment(N64Rom &Rom, u8 Segment, u32 RomStart, u32 Rom
         case COMPRESSION_RNC: return Compression::DecompressRNC(Rom, RomStart);
         case COMPRESSION_YAY0: return Compression::DecompressYAY0(Rom, RomStart);
         default:
-            printf("Tried to decompress segment 0x%02x which is not compressed\n", Segment);
+            if (VerbosePrinting) printf("Tried to decompress segment 0x%02x which is not compressed\n", Segment);
             u32 Size = RomEnd - RomStart;
             std::vector<u8> SegData;
             SegData.resize(Size);

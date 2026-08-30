@@ -14,6 +14,10 @@ struct TransitionTexData {
     u32 Size = 0;
 };
 
+struct Segment2Match {
+    u32 Addr = 0, Code = 0, Size = 0;
+};
+
 const TransitionTexData TransitionData[] = {
     {0x122B8, "0F458", 32, 64, 0x800},
     {0x12AB8, "0FC58", 32, 64, 0x800},
@@ -25,6 +29,8 @@ void FindAndLoadSegment2(N64Rom &Rom) {
     u32 Seg2Start = 0;
     u32 Seg2End = 0;
     std::vector<std::pair<u32, u32>> Matches;
+    std::vector<Segment2Match> CodeMatches;
+
     for (u32 i = 0; i < Rom.Size - 16; i += 4) {
         if (Rom.ReadBytes<u32>(i, false) == 0x4D494F30) {
             u32 UncompSize = Rom.ReadBytes<u32>(i + 4, false);
@@ -34,71 +40,76 @@ void FindAndLoadSegment2(N64Rom &Rom) {
         }
     }
 
-    u32 WCount = Rom.Size / 4;
+    u32 WCount = Rom.Size / 8;
     for (const auto &Match : Matches) {
-        u32 off = Match.first;
-        
-        u32 Upper = (off >> 16) & 0xFFFF;
-        u32 Lower = off & 0xFFFF;
+        u32 Off = Match.first;
+
+        u32 Upper = (Off >> 16) & 0xFFFF;
+        u32 Lower = Off & 0xFFFF;
+
         if (Lower >= 0x8000) {
             Upper = (Upper + 1) & 0xFFFF;
         }
 
-        bool FoundSeg2 = false;
         for (u32 I = 0; I < WCount; ++I) {
             u32 Word = Rom.ReadBytes<u32>(I * 4, false);
-            
-            if ((Word >> 26) == 15 && (Word & 0xFFFF) == Upper) {
-                u32 ScanStart = (I >= 20) ? (I - 20) : 0;
-                u32 ScanEnd = MIN(WCount, I + 20);
+            if ((Word >> 26) != 15) continue;
+            if ((Word & 0xFFFF) != Upper) continue;
 
-                bool HasLower = false;
-                bool HasSegLoad = false;
+            u32 ScanStart = (I >= 20) ? (I - 20) : 0;
+            u32 ScanEnd = MIN(WCount, I + 20);
 
-                for (u32 J = ScanStart; J < ScanEnd; ++J) {
-                    u32 ScanWord = Rom.ReadBytes<u32>(J * 4, false);
-                    u32 ScanOp = ScanWord >> 26;
+            bool HasLower = false;
+            bool HasSegLoad = false;
+            for (u32 J = ScanStart; J < ScanEnd; ++J) {
+                u32 ScanWord = Rom.ReadBytes<u32>(J * 4, false);
+                u32 ScanOp = ScanWord >> 26;
 
-                    if ((ScanOp == 9 || ScanOp == 13) && (ScanWord & 0xFFFF) == Lower) {
-                        HasLower = true;
-                    }
-                    
-                    if ((ScanWord & 0xFFE0FFFF) == 0x24000002 || (ScanWord & 0xFFE0FFFF) == 0x34000002) {
-                        HasSegLoad = true;
-                    }
+                // addiu/ori using lower
+                if ((ScanOp == 9 || ScanOp == 13) && (ScanWord & 0xFFFF) == Lower) {
+                    HasLower = true;
                 }
 
-                if (HasLower && HasSegLoad) {
-                    FoundSeg2 = true;
+                // lui/ori that loads 2 into any reg
+                if ((ScanWord & 0xFFE0FFFF) == 0x24000002 || (ScanWord & 0xFFE0FFFF) == 0x34000002) {
+                    HasSegLoad = true;
+                }
+            }
+
+            if (HasLower && HasSegLoad) {
+                u32 CodeAddr = I * 4;
+                CodeMatches.push_back({Off, CodeAddr, Match.second});
+            }
+        }
+    }
+
+    printf("Found Segment 2 references:\n");
+
+    for (const auto &Match : CodeMatches) {
+        printf("  0x%08x  (code: 0x%08x, size: 0x%x)\n", Match.Addr, Match.Code, Match.Size);
+    }
+
+    if (!CodeMatches.empty()) {
+        Seg2Start = CodeMatches[0].Addr;
+        Seg2End = Rom.Size;
+
+        if (GameType.IsOldBinary()) {
+            for (const auto &Match : Matches) {
+                if (Match.first == 0x00800000) {
+                    Seg2Start = 0x00800000 + 0x3156;
+                    printf("Old binary Segment 2 detected at 0x00800000, using Segment 2 from 0x%08x\n", Seg2Start);
                     break;
                 }
             }
+        } else {
+            printf("Selected: 0x%08x\n", Seg2Start);
         }
-
-        if (FoundSeg2) {
-            Seg2Start = off;
-            Seg2End = Rom.Size;
-            break;
-        }
-    }
-
-    if (Seg2Start != 0) {
-        printf("Found Segment 2 at 0x%x\n", Seg2Start);
     } else {
         Seg2Start = 0x800000;
+        Seg2End = Rom.Size;
     }
+
     LoadSegment(Rom, 0x02, Seg2Start, Seg2End, true);
-
-    /*std::vector<u8> SrcData(8192);
-    for (u32 j = 0; j < 8192; j++) SrcData[j] = Rom.ReadBytes<u8>(0x02000000 + j);
-
-    std::vector<u8> RGBA((16*16) * 4);
-    BinImg::DecodeRGBA16(SrcData.data(), RGBA.data(), (16*16));
-    stbi_write_png("peak.png", 16, 16, 4, RGBA.data(), 64);
-
-    FILE *b = fopen("peak.bin", "wb");
-    fwrite(SegmentData[2].data(), 131072, 1, b);
-    fclose(b);*/
 }
 
 void ExportSeg2Textures(N64Rom &Rom) {
