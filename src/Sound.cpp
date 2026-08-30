@@ -125,7 +125,7 @@ void ExportSequences(N64Rom &Rom) {
             printf("Sequence 0x%02x is out of bounds, Skipping\n", I);
             continue;
         }
-        if (UseNames) {
+        if (UseNames && I < SequenceNames.size()) {
             std::string Name = SequenceNames[I];
             std::string FilePath = MusicPath + "/" + Name + ".m64";
             ExportSequence(Rom, I, FilePath.c_str());

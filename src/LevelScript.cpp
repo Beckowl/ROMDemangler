@@ -1187,11 +1187,14 @@ void ExportLevel(N64Rom &Rom, u8 LvlID) {
     Script.LevelID = LvlID;
     Script.Name = LvlName;
 
-    for (auto &SegOff : SegmentOffsets) {
+    for (s32 I = 0; I < MAX_SEGMENT; I++) {
+        if (I == 2) continue;
+
+        auto &SegOff = SegmentOffsets[I];
         SegOff[0] = 0;
         SegOff[1] = 0;
-    }
-    for (auto &SegData : SegmentData) {
+
+        auto &SegData = SegmentData[I];
         SegData.clear();
     }
 
