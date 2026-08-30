@@ -111,11 +111,13 @@ public:
                     return Buf;
                 }
             } else {
-                if (Offset > 0x400000 and Offset < 0x420000) {
-                    Offset = 0x1200000 + (SegAddr & 0xFFFFF);
-                } else {
-                    if (Offset > 0x5F0000 and Offset < 0x620000) {
-                        Offset += 0x1E0000;
+                if (GameType.IsOldBinary()) {
+                    if (Offset > 0x400000 and Offset < 0x420000) {
+                        Offset = 0x1200000 + (SegAddr & 0xFFFFF);
+                    } else {
+                        if (Offset > 0x5F0000 and Offset < 0x620000) {
+                            Offset += 0x1E0000;
+                        }
                     }
                 }
             }

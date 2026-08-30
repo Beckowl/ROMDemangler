@@ -30,56 +30,56 @@ void FindAndLoadSegment2(N64Rom &Rom) {
     u32 Seg2End = 0;
     std::vector<std::pair<u32, u32>> Matches;
     std::vector<Segment2Match> CodeMatches;
-
+    
+    std::unordered_map<u32, u32> Mio0Map;
     for (u32 i = 0; i < Rom.Size - 16; i += 4) {
         if (Rom.ReadBytes<u32>(i, false) == 0x4D494F30) {
             u32 UncompSize = Rom.ReadBytes<u32>(i + 4, false);
             if (UncompSize >= 32768 && UncompSize <= 131072) {
                 Matches.push_back({i, UncompSize});
+                Mio0Map[i] = UncompSize;
             }
         }
     }
 
-    u32 WCount = Rom.Size / 8;
-    for (const auto &Match : Matches) {
-        u32 Off = Match.first;
+    u32 WCount = Rom.Size / 4;
+    for (u32 I = 0; I < WCount; ++I) {
+        u32 Word = Rom.ReadBytes<u32>(I * 4, false);
+        if ((Word >> 26) != 15) continue;
 
-        u32 Upper = (Off >> 16) & 0xFFFF;
-        u32 Lower = Off & 0xFFFF;
+        u32 LuiUpper = Word & 0xFFFF;
+        
+        u32 ScanStart = (I >= 20) ? (I - 20) : 0;
+        u32 ScanEnd = MIN(WCount, I + 20);
 
-        if (Lower >= 0x8000) {
-            Upper = (Upper + 1) & 0xFFFF;
+        bool HasLower = false;
+        bool HasSegLoad = false;
+        u32 ReconstructedAddr = 0;
+
+        for (u32 J = ScanStart; J < ScanEnd; ++J) {
+            u32 ScanWord = Rom.ReadBytes<u32>(J * 4, false);
+            u32 ScanOp = ScanWord >> 26;
+
+            if (ScanOp == 9 || ScanOp == 13) {
+                u32 Lower = ScanWord & 0xFFFF;
+                
+                u32 OriginalUpper = (Lower >= 0x8000) ? (LuiUpper - 1) & 0xFFFF : LuiUpper;
+                u32 TestAddr = (OriginalUpper << 16) | Lower;
+
+                if (Mio0Map.count(TestAddr)) {
+                    HasLower = true;
+                    ReconstructedAddr = TestAddr;
+                }
+            }
+
+            if ((ScanWord & 0xFFE0FFFF) == 0x24000002 || (ScanWord & 0xFFE0FFFF) == 0x34000002) {
+                HasSegLoad = true;
+            }
         }
 
-        for (u32 I = 0; I < WCount; ++I) {
-            u32 Word = Rom.ReadBytes<u32>(I * 4, false);
-            if ((Word >> 26) != 15) continue;
-            if ((Word & 0xFFFF) != Upper) continue;
-
-            u32 ScanStart = (I >= 20) ? (I - 20) : 0;
-            u32 ScanEnd = MIN(WCount, I + 20);
-
-            bool HasLower = false;
-            bool HasSegLoad = false;
-            for (u32 J = ScanStart; J < ScanEnd; ++J) {
-                u32 ScanWord = Rom.ReadBytes<u32>(J * 4, false);
-                u32 ScanOp = ScanWord >> 26;
-
-                // addiu/ori using lower
-                if ((ScanOp == 9 || ScanOp == 13) && (ScanWord & 0xFFFF) == Lower) {
-                    HasLower = true;
-                }
-
-                // lui/ori that loads 2 into any reg
-                if ((ScanWord & 0xFFE0FFFF) == 0x24000002 || (ScanWord & 0xFFE0FFFF) == 0x34000002) {
-                    HasSegLoad = true;
-                }
-            }
-
-            if (HasLower && HasSegLoad) {
-                u32 CodeAddr = I * 4;
-                CodeMatches.push_back({Off, CodeAddr, Match.second});
-            }
+        if (HasLower && HasSegLoad) {
+            u32 CodeAddr = I * 4;
+            CodeMatches.push_back({ReconstructedAddr, CodeAddr, Mio0Map[ReconstructedAddr]});
         }
     }
 
