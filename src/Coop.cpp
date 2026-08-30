@@ -2,6 +2,7 @@
 #include "LevelScript.h"
 #include "ScrollingTexture.h"
 #include "MovingTexture.h"
+#include "Segment2.h"
 #include "Sound.h"
 #include "Tweak.h"
 
@@ -11,7 +12,7 @@ void ExportLua(N64Rom &Rom) {
     printf("Exporting lua file\n");
 
     fprintf(LuaDump, "-- name: %s\n\n", Rom.ROMInternalName.c_str());
-    fprintf(LuaDump, "-- Manual changes are needed in this file for it to properly work.\n\n");
+    // fprintf(LuaDump, "-- Manual changes are needed in this file for it to properly work.\n\n");
 
     if (!ScrollingTextures.empty()) {
         fprintf(LuaDump, "-- Scrolling Textures\n");
@@ -41,6 +42,11 @@ void ExportLua(N64Rom &Rom) {
     if (TweakExport) {
         if (GameType.IsOldBinary()) {
             fprintf(LuaDump, "\n-- Tweaks\n%s", GetRomTweaks(Rom).c_str());
+        }
+    }
+    if (TextExport) {
+        if (GameType.IsBinary()) {
+            fprintf(LuaDump, "\n-- Text\n%s", GetRomText(Rom).c_str());
         }
     }
     fclose(LuaDump);

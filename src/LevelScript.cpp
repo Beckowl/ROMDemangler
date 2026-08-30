@@ -1,5 +1,6 @@
 #include "LevelScript.h"
 #include "Actor.h"
+#include "N64Rom.h"
 #include "ScrollingTexture.h"
 #include "GeoLayout.h"
 #include "Collision.h"
@@ -822,7 +823,7 @@ std::string LvlCmdLoadModelFromGeo(N64Rom &Rom, LevelScript &Script, u32 &Start)
     u8 GeoBank = Geo >> 24;
     std::string GeoName = GetLabelFromMap(Geo);
 
-    if ((!GeoName.starts_with("Custom_") || GeoBank != 0x19) && (GameType.IsOldBinary())) {
+    if ((!GeoName.starts_with("Custom_") || GeoBank != 0x19) && (GameType.IsBinary())) {
         if (GeoBank == 0x0D || GeoBank == 0x0C) {
             std::string Group = ActorGroup::FindNearestGroup(SegmentOffsets[GeoBank][0]);
             const std::string BuiltinName = ActorGroup::GetGeoNameWithGroup(Group, Geo);
@@ -1222,19 +1223,19 @@ void ExportLevel(N64Rom &Rom, u8 LvlID) {
     }
 
     bool ForceDontPrint = false;
-    bool OldBinaryHack = GameType.IsOldBinary();
+    bool BinaryHack = GameType.IsOldBinary() || GameType.IsOldBinary();
 
     auto ShouldPrintCmd = [&](u8 Cmd) {
         if (!Script.FoundLevel) {
             return false;
         }
 
-        if ((Entry >> 24) == 0x15 && ForceDontPrint && OldBinaryHack) {
+        if ((Entry >> 24) == 0x15 && ForceDontPrint && BinaryHack) {
             return false;
         }
 
         if (IsJumpLvlCmd(Cmd)) {
-            if (OldBinaryHack) {
+            if (BinaryHack) {
                 if (Cmd == 0x06) {
                     u32 Target = Rom.ReadBytes<u32>(Entry + 4, false);
                     if ((Target >> 24) == 0x15) {

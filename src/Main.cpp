@@ -13,6 +13,7 @@ bool TweakExport = false;
 bool CollisionFix = false;
 bool SkyboxExport = false;
 bool TexturesExport = false;
+bool TextExport = false;
 SM64GameType GameType;
 u32 FoundScriptEntry = 0;
 bool ExportSegment0 = false;
@@ -164,6 +165,7 @@ int main(int argc, char** argv) {
         ("custom-symbols", "Path to a JSON symbol file that overrides entries from symbolMap.json (for romhacks with custom symbols)", cxxopts::value<std::string>())
         ("skyboxes", "Export Skyboxes", cxxopts::value<bool>())
         ("textures", "Export Segment2 textures", cxxopts::value<bool>())
+        ("text", "Export dialogs and course names", cxxopts::value<bool>())
         ("h,help", "Print usage");
 
     auto Result = Options.parse(argc, argv);
@@ -174,6 +176,7 @@ int main(int argc, char** argv) {
     CollisionFix = Result["fix-collision"].as<bool>();
     SkyboxExport = Result["skyboxes"].as<bool>();
     TexturesExport = Result["textures"].as<bool>();
+    TextExport = Result["text"].as<bool>();
     std::string RAMPath;
     std::string CustomSymbolsPath;
     if (Result.count("actors")) ActorsExport = Result["actors"].as<std::string>();

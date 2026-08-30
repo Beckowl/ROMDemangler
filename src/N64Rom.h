@@ -30,6 +30,9 @@ struct SM64GameType {
     bool IsNewBinary(void) {
         return (ID == GT_BBP);
     }
+    bool IsBinary(void) {
+        return IsOldBinary() || IsNewBinary();
+    }
     bool IsDecomp(void) {
         return (ID == GT_DECOMP || ID == GT_HACKER);
     }

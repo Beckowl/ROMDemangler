@@ -25,6 +25,68 @@ const TransitionTexData TransitionData[] = {
     {0x142B8, "11458", 32, 64, 0x800}
 };
 
+const std::string CourseNames[] = {
+    "COURSE_NONE", "COURSE_BOB", "COURSE_WF", "COURSE_JRB", "COURSE_CCM", 
+    "COURSE_BBH", "COURSE_HMC", "COURSE_LLL", "COURSE_SSL", "COURSE_DDD", 
+    "COURSE_SL", "COURSE_WDW", "COURSE_TTM", "COURSE_THI", "COURSE_TTC", 
+    "COURSE_RR", "COURSE_BITDW", "COURSE_BITFS", "COURSE_BITS", "COURSE_PSS", 
+    "COURSE_COTMC", "COURSE_TOTWC", "COURSE_VCUTM", "COURSE_WMOTR", "COURSE_SA", 
+    "COURSE_CAKE_END"
+};
+
+std::string SM64ToString(u8 num) {
+    if (num < 10) {
+        return std::string(1, (char)(num + 0x30));
+    } else if (num < 0x24) {
+        return std::string(1, (char)(num + 0x37));
+    } else if (num < 0x3E) {
+        return std::string(1, (char)(num + 0x3D));
+    }
+
+    switch (num) {
+        case 62:   return "'";
+        case 63:   return ".";
+        case 80:   return "^";
+        case 81:   return "|";
+        case 82:   return "<";
+        case 83:   return ">";
+        case 84:   return "[A]";
+        case 85:   return "[B]";
+        case 86:   return "[C]";
+        case 87:   return "[Z]";
+        case 88:   return "[R]";
+        case 111:  return ",";
+        case 0x9E: return " ";
+        case 0x9F: return "-";
+        case 208:  return "/";
+        case 209:  return "the";
+        case 210:  return "you";
+        case 224:  return "[%]";
+        case 225:  return "(";
+        case 226:  return ")(";
+        case 227:  return ")";
+        case 228:  return "↔";
+        case 229:  return "&";
+        case 230:  return ":";
+        case 240:  return "゛";
+        case 241:  return "゜";
+        case 242:  return "!";
+        case 243:  return "%";
+        case 244:  return "?";
+        case 245:  return "『";
+        case 246:  return "』";
+        case 247:  return "~";
+        case 248:  return "…";
+        case 249:  return "$";
+        case 250:  return "★";
+        case 251:  return "×";
+        case 252:  return "・";
+        case 253:  return "☆";
+        case 254:  return "\\\n";
+        default:   return "";
+    }
+}
+
 void FindAndLoadSegment2(N64Rom &Rom) {
     u32 Seg2Start = 0;
     u32 Seg2End = 0;
@@ -191,7 +253,6 @@ void ExportSeg2Textures(N64Rom &Rom) {
         u32 Addr = Address + CreditsOffsets;
         std::string FilePath = Seg2Path + std::format("segment2.{:05X}.rgba16.png", Addr);
         stbi_write_png(FilePath.c_str(), 8, 8, 4, RGBA.data(), 8 * 4);
-
     }
 
     const std::string ShadowNames[] = {"shadow_quarter_circle", "shadow_quarter_square"};
@@ -241,4 +302,92 @@ void ExportSeg2Textures(N64Rom &Rom) {
             stbi_write_png(FilePath.c_str(), 32, 32, 4, RGBA.data(), 32 * 4);
         }
     }
+}
+
+std::string GetRomText(N64Rom &Rom) {
+    std::ostringstream TextDump;
+
+    u32 DialogTableAddr = 0x0200FFC8;
+    for (u32 Dialog = 0; Dialog < 170; Dialog++) {
+        u32 Entry = DialogTableAddr + (Dialog * 16);
+        
+        u32 Unused = Rom.ReadBytes<u32>(Entry);
+        u8 LinesPerBox = Rom.ReadBytes<u8>(Entry + 4);
+        s16 LeftOffset = Rom.ReadBytes<s16>(Entry + 6);
+        s16 Width = Rom.ReadBytes<s16>(Entry + 8);
+        u32 StrOffset = Rom.ReadBytes<u32>(Entry + 12);
+
+        std::string Str = "";
+        u32 Curr = StrOffset;
+        while (true) {
+            u8 StrNum = Rom.ReadBytes<u8>(Curr++);
+            if (StrNum != 0xFF) {
+                Str += SM64ToString(StrNum);
+            } else {
+                break;
+            }
+        }
+
+        TextDump << std::format("smlua_text_utils_dialog_replace(DIALOG_{:03d}, {}, {}, {}, {},\n\"{}\"\n)\n\n", 
+                            Dialog, Unused, LinesPerBox, LeftOffset, Width, Str);
+    }
+
+    u32 LevelNamesAddr = 0x008140BE;
+    u32 ActTableAddr = 0x00814A82;
+    for (u32 Course = 0; Course < 26; Course++) {
+        u32 NamePtr = Rom.ReadBytes<u32>(LevelNamesAddr + Course * 4);
+        std::string Str = "";
+        u32 Curr = NamePtr;
+        while (true) {
+            u8 StrNum = Rom.ReadBytes<u8>(Curr++);
+            if (StrNum != 0xFF) {
+                Str += SM64ToString(StrNum);
+            } else {
+                break;
+            }
+        }
+
+        if (Course < 15) {
+            std::vector<std::string> Acts;
+            for (u32 Act = 0; Act < 6; Act++) {
+                u32 ActPtr = Rom.ReadBytes<u32>(ActTableAddr + Course * 24 + Act * 4);
+                std::string ActStr = "";
+                u32 Curr = ActPtr;
+                while (true) {
+                    u8 StrNum = Rom.ReadBytes<u8>(Curr++);
+                    if (StrNum != 0xFF) {
+                        ActStr += SM64ToString(StrNum);
+                    } else {
+                        break;
+                    }
+                }
+                Acts.push_back(ActStr);
+            }
+            
+            TextDump << std::format("smlua_text_utils_course_acts_replace({}, \"{}\", \"{}\", \"{}\", \"{}\", \"{}\", \"{}\", \"{}\")\n\n",
+                                CourseNames[Course+1], Str, Acts[0], Acts[1], Acts[2], Acts[3], Acts[4], Acts[5]);
+        } else if (Course < 25) {
+            TextDump << std::format("smlua_text_utils_secret_star_replace({} + 1, \"{}\")\n", Course, Str);
+        } else {
+            TextDump << std::format("smlua_text_utils_castle_secret_stars_replace(\"{}\")\n", Str);
+        }
+    }
+
+    u32 Extra = ActTableAddr + (15 * 6 * 4);
+    for (u32 I = 0; I < 7; I++) {
+        u32 ExPtr = Rom.ReadBytes<u32>(Extra + I * 4);
+        std::string Str = "";
+        u32 Curr = ExPtr;
+        while (true) {
+            u8 StrNum = Rom.ReadBytes<u8>(Curr++);
+            if (StrNum != 0xFF) {
+                Str += SM64ToString(StrNum);
+            } else {
+                break;
+            }
+        }
+        TextDump << std::format("smlua_text_utils_extra_text_replace({}, \"{}\")\n", I, Str);
+    }
+
+    return TextDump.str();
 }

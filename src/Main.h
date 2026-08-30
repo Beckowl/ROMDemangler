@@ -14,4 +14,5 @@ extern u32 FoundScriptEntry;
 extern bool IgnoreSegment0;
 extern bool CollisionFix;
 extern bool SkyboxExport;
+extern bool TextExport;
 extern std::string ActorsExport;
